@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0d0b08">
-<title>暗巷 · 棉花与黄金 1835</title>
+<title>暗巷 · 三部曲</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
   html,body{
@@ -59,17 +59,117 @@ const BLOCK = 400;
 const ROAD = 120;
 const GRID_N = 9;
 const WORLD = BLOCK * GRID_N;
-const MAX_ALLIES = 3;
+const MAX_ALLIES = 7;
+const ALLY_PRICE = 15;
 
-/* 副地图常量 */
 const FARM_MAP_W = 1600, FARM_MAP_H = 1200;
 const MINE_MAP_W = 1600, MINE_MAP_H = 1200;
 const SUBMAP_CENTER_X = FARM_MAP_W / 2, SUBMAP_CENTER_Y = FARM_MAP_H / 2;
 
-/* 运送时间 */
 const TRANSPORT_TIME = 10;
 const COLLECT_TIME = 1.0;
 const NODE_RESPAWN = 5;
+const WORKER_MAX_HP = 100;
+
+/* ================= 模式配置 ================= */
+const MODES = {
+  south1835: {
+    id: 'south1835',
+    title: '棉花与黄金',
+    year: '1835',
+    subtitle: '美国南方 · 南北战争前',
+    playerName: '老大',
+    allyLabel: '黑人兄弟',
+    allyNames: ['黑人兄弟·棉花田','黑人兄弟·铁匠','黑人兄弟·逃亡者','黑人兄弟·自由人','黑人兄弟·猎人','黑人兄弟·木匠','黑人兄弟·牧人'],
+    enemyTemplates: [
+      { id:'slavecatcher', name:'奴隶捕手', color:'#4a3a2e', hp:30, speed:[100,150], fire:[0.9,1.8], dmg:8, range:600 },
+      { id:'overseer', name:'种植园监工', color:'#6b2a1a', hp:45, speed:[80,120], fire:[1.1,2.0], dmg:10, range:500 },
+      { id:'militia', name:'南方民兵', color:'#2a3a5a', hp:55, speed:[70,100], fire:[1.3,2.2], dmg:11, range:640 },
+      { id:'bounty', name:'赏金猎人', color:'#6b5a2e', hp:35, speed:[130,180], fire:[0.8,1.5], dmg:7, range:520 },
+      { id:'gambler', name:'赌徒', color:'#5a2a4a', hp:25, speed:[160,220], fire:[1.0,1.8], dmg:6, range:480 }
+    ],
+    subMaps: {
+      farm: { name:'棉花农场', shortName:'农场', resourceName:'棉花', price:8, mapColor:'#22301e', nodeFill:'rgba(235,235,220,0.95)', nodeType:'farm' },
+      mine: { name:'金矿矿洞', shortName:'矿洞', resourceName:'金矿', price:15, mapColor:'#1c1c22', nodeFill:'rgba(212,175,55,0.95)', nodeType:'mine' }
+    },
+    boost: {
+      type:'whip',
+      name:'鞭打加速',
+      boostPerStack:0.20,
+      maxStacks:5,
+      duration:10,
+      hpCost:10,
+      cost:0,
+      cooldown:0,
+      color:[200,40,20]
+    }
+  },
+  britain: {
+    id: 'britain',
+    title: '工业与资本',
+    year: '1900',
+    subtitle: '英国 · 二十世纪初',
+    playerName: '工厂老板',
+    allyLabel: '工人兄弟',
+    allyNames: ['工人兄弟·纺织工','工人兄弟·机械师','工人兄弟·矿工','工人兄弟·码头工','工人兄弟·铁路工','工人兄弟·学徒','工人兄弟·工头'],
+    enemyTemplates: [
+      { id:'striker', name:'罢工者', color:'#5a2a2a', hp:35, speed:[90,140], fire:[1.0,1.8], dmg:8, range:600 },
+      { id:'rival', name:'竞争厂主打手', color:'#4a4a2a', hp:50, speed:[80,120], fire:[1.1,2.0], dmg:10, range:520 },
+      { id:'pinkerton', name:'平克顿侦探', color:'#2a3a4a', hp:60, speed:[70,100], fire:[1.2,2.1], dmg:11, range:640 },
+      { id:'unionist', name:'工会分子', color:'#3a5a3a', hp:40, speed:[120,180], fire:[0.9,1.6], dmg:7, range:540 },
+      { id:'thug', name:'街头暴徒', color:'#5a3a2a', hp:30, speed:[150,200], fire:[0.8,1.5], dmg:6, range:480 }
+    ],
+    subMaps: {
+      farm: { name:'工厂车间', shortName:'车间', resourceName:'布匹', price:10, mapColor:'#2a2620', nodeFill:'rgba(220,200,180,0.95)', nodeType:'farm' },
+      mine: { name:'投资基地', shortName:'投资', resourceName:'股息', price:20, mapColor:'#1c1c22', nodeFill:'rgba(212,175,55,0.95)', nodeType:'mine' }
+    },
+    boost: {
+      type:'money',
+      name:'加钱加班',
+      boostPerStack:0.20,
+      maxStacks:5,
+      duration:10,
+      hpCost:0,
+      cost:20,
+      cooldown:0,
+      color:[212,175,55]
+    }
+  },
+  germany: {
+    id: 'germany',
+    title: '抵抗与信仰',
+    year: '1943',
+    subtitle: '德国 · 二战期间',
+    playerName: 'USSR 卧底',
+    allyLabel: '反纳粹兄弟',
+    allyNames: ['反纳粹兄弟·裁缝','反纳粹兄弟·铁匠','反纳粹兄弟·教师','反纳粹兄弟·印刷工','反纳粹兄弟·医生','反纳粹兄弟·面包师','反纳粹兄弟·学生'],
+    enemyTemplates: [
+      { id:'ss', name:'党卫军', color:'#1a1a1a', hp:55, speed:[80,120], fire:[1.0,1.9], dmg:10, range:620 },
+      { id:'gestapo', name:'盖世太保', color:'#2a2a2e', hp:45, speed:[90,140], fire:[1.1,2.0], dmg:9, range:560 },
+      { id:'patrol', name:'巡逻兵', color:'#3a3a4a', hp:50, speed:[70,100], fire:[1.2,2.1], dmg:11, range:640 },
+      { id:'informant', name:'线人', color:'#4a3a2a', hp:30, speed:[140,190], fire:[0.9,1.7], dmg:7, range:500 },
+      { id:'officer', name:'纳粹军官', color:'#1a1a2a', hp:70, speed:[60,90], fire:[1.3,2.2], dmg:12, range:660 }
+    ],
+    subMaps: {
+      farm: { name:'战场捡遗物', shortName:'战场', resourceName:'遗物', price:12, mapColor:'#2a2418', nodeFill:'rgba(220,200,140,0.95)', nodeType:'farm' },
+      mine: { name:'偷纳粹金库', shortName:'金库', resourceName:'黄金', price:25, mapColor:'#1a1610', nodeFill:'rgba(212,175,55,0.95)', nodeType:'mine' }
+    },
+    boost: {
+      type:'faith',
+      name:'信仰支持',
+      boostPerStack:0.25,
+      maxStacks:4,
+      duration:8,
+      hpCost:0,
+      cost:0,
+      cooldown:2,
+      color:[200,100,60]
+    }
+  }
+};
+
+let mode = MODES.south1835;
+let screen = 'start';
 
 /* ================= 全局经济 / 场景 ================= */
 let currentMap = 'city';
@@ -77,14 +177,14 @@ let money = 100;
 let shopOpen = false;
 let transports = [];
 
-const farm = { warehouse: 0, allies: [], nodes: [], lastUpdate: 0 };
-const mine = { warehouse: 0, allies: [], nodes: [], lastUpdate: 0 };
+const farm = { warehouse:0, allies:[], nodes:[], lastUpdate:0, boostStacks:0, boostTimer:0, boostCooldown:0, whipFlash:0 };
+const mine = { warehouse:0, allies:[], nodes:[], lastUpdate:0, boostStacks:0, boostTimer:0, boostCooldown:0, whipFlash:0 };
 
 /* ================= 摇杆 ================= */
 const STICK_RADIUS = Math.min(64, Math.min(window.innerWidth, window.innerHeight) * 0.14);
-const moveStick = { active: false, id: null, baseX: 0, baseY: 0, curX: 0, curY: 0, dx: 0, dy: 0 };
-const aimStick  = { active: false, id: null, baseX: 0, baseY: 0, curX: 0, curY: 0, dx: 0, dy: 0 };
-const dashBtn = { x: 0, y: 0, r: 42 };
+const moveStick = { active:false, id:null, baseX:0, baseY:0, curX:0, curY:0, dx:0, dy:0 };
+const aimStick  = { active:false, id:null, baseX:0, baseY:0, curX:0, curY:0, dx:0, dy:0 };
+const dashBtn = { x:0, y:0, r:42 };
 
 /* ================= 状态 ================= */
 let buildings = [];
@@ -95,7 +195,7 @@ let bullets = [];
 let particles = [];
 let pickups = [];
 let allies = [];
-let cam = { x: 0, y: 0 };
+let cam = { x:0, y:0 };
 let shake = 0;
 let kills = 0;
 let gameOver = false;
@@ -117,95 +217,70 @@ let upgradeUI = null;
 let pausedForUpgrade = false;
 
 const upgradePool = [
-  { id: 'dmg',     name: '淬火铅弹', desc: '子弹伤害 +15%',        apply: () => player.bulletDmg *= 1.15 },
-  { id: 'firerate',name: '快枪手',   desc: '射速 +12%',           apply: () => player.fireRate *= 0.88 },
-  { id: 'magsize', name: '扩容弹袋', desc: '弹药容量 +6',          apply: () => { player.mag += 6; player.ammo = player.mag; } },
-  { id: 'reload',  name: '快速装填', desc: '装填速度 +20%',        apply: () => player.reloadTime *= 0.8 },
-  { id: 'speed',   name: '轻快步履', desc: '移动速度 +10%',        apply: () => player.moveSpeed *= 1.1 },
-  { id: 'dashcd',  name: '田野身法', desc: '冲刺冷却 -18%',        apply: () => player.dashMaxCd *= 0.82 },
-  { id: 'maxhp',   name: '坚韧体魄', desc: '最大生命 +20',         apply: () => { player.maxHp += 20; player.hp += 20; } },
-  { id: 'pickup',  name: '拾荒手套', desc: '拾取范围 +40%',        apply: () => player.pickupRange *= 1.4 },
-  { id: 'drone',   name: '猎犬',     desc: '获得一只猎犬',         apply: () => addDrone() },
-  { id: 'pierce',  name: '穿甲弹',   desc: '子弹可穿透 1 个敌人',  apply: () => player.pierce += 1 },
-  { id: 'ally',    name: '街头兄弟', desc: '招募一名黑人兄弟',     apply: () => addAlly(player.x + rand(-40, 40), player.y + rand(-40, 40)) },
-  { id: 'allyhp',  name: '兄弟情义', desc: '所有黑人兄弟生命 +50% 并回满', apply: () => { for (const a of allies) { a.maxHp *= 1.5; a.hp = a.maxHp; } } },
+  { id:'dmg', name:'淬火铅弹', desc:'子弹伤害 +15%', apply:()=>player.bulletDmg*=1.15 },
+  { id:'firerate', name:'快枪手', desc:'射速 +12%', apply:()=>player.fireRate*=0.88 },
+  { id:'magsize', name:'扩容弹袋', desc:'弹药容量 +6', apply:()=>{player.mag+=6;player.ammo=player.mag;} },
+  { id:'reload', name:'快速装填', desc:'装填速度 +20%', apply:()=>player.reloadTime*=0.8 },
+  { id:'speed', name:'轻快步履', desc:'移动速度 +10%', apply:()=>player.moveSpeed*=1.1 },
+  { id:'dashcd', name:'田野身法', desc:'冲刺冷却 -18%', apply:()=>player.dashMaxCd*=0.82 },
+  { id:'maxhp', name:'坚韧体魄', desc:'最大生命 +20', apply:()=>{player.maxHp+=20;player.hp+=20;} },
+  { id:'pickup', name:'拾荒手套', desc:'拾取范围 +40%', apply:()=>player.pickupRange*=1.4 },
+  { id:'drone', name:'猎犬', desc:'获得一只猎犬', apply:()=>addDrone() },
+  { id:'pierce', name:'穿甲弹', desc:'子弹可穿透 1 个敌人', apply:()=>player.pierce+=1 },
+  { id:'ally', name:'招募兄弟', desc:'招募一名兄弟', apply:()=>addAlly(player.x+rand(-40,40),player.y+rand(-40,40)) },
+  { id:'allyhp', name:'兄弟情义', desc:'所有兄弟生命 +50% 并回满', apply:()=>{for(const a of allies){a.maxHp*=1.5;a.hp=a.maxHp;}} }
 ];
 
 /* ================= 玩家 ================= */
 const player = {
-  x: 0, y: 0, vx: 0, vy: 0, r: 11, angle: 0,
-  hp: 100, maxHp: 100,
-  ammo: 30, mag: 30,
-  fireCd: 0, reloadT: 0, reloadTime: 1.15,
-  dashCd: 0, dashMaxCd: 0.85, dashTime: 0,
-  hurtCd: 0,
-  bulletDmg: 14,
-  fireRate: 0.075,
-  moveSpeed: 330,
-  pickupRange: 28,
-  pierce: 0,
-  drones: [],
-  droneAngle: 0,
-  name: '老大',
+  x:0, y:0, vx:0, vy:0, r:11, angle:0,
+  hp:100, maxHp:100,
+  ammo:30, mag:30,
+  fireCd:0, reloadT:0, reloadTime:1.15,
+  dashCd:0, dashMaxCd:0.85, dashTime:0,
+  hurtCd:0, bulletDmg:14, fireRate:0.075,
+  moveSpeed:330, pickupRange:28, pierce:0,
+  drones:[], droneAngle:0, name:'老大'
 };
 
 /* ================= 盟友 ================= */
-const ALLY_NAMES = [
-  '黑人兄弟·棉花田',
-  '黑人兄弟·铁匠',
-  '黑人兄弟·逃亡者',
-  '黑人兄弟·自由人',
-  '黑人兄弟·猎人'
-];
-
 function makeAlly(x, y) {
   return {
-    x, y, r: 12,
-    hp: 90, maxHp: 90,
-    speed: 280,
-    angle: 0,
-    attackCd: 0,
-    hurt: 0,
-    dead: false,
-    name: pick(ALLY_NAMES),
-    punchT: 0,
+    x, y, r:12, hp:90, maxHp:90, speed:280, angle:0,
+    attackCd:0, hurt:0, dead:false,
+    name: pick(mode.allyNames), punchT:0
   };
 }
 
 function addAlly(x, y) {
   if (allies.length >= MAX_ALLIES) return false;
-  if (x === undefined) x = player.x + rand(-40, 40);
-  if (y === undefined) y = player.y + rand(-40, 40);
+  if (x === undefined) x = player.x + rand(-40,40);
+  if (y === undefined) y = player.y + rand(-40,40);
   const a = makeAlly(x, y);
   allies.push(a);
-  for (let i = 0; i < 14; i++) {
-    spawnParticle(x, y, rand(0, Math.PI * 2), rand(40, 220), '212,175,55', rand(0.2, 0.5), rand(2, 4));
-  }
+  for (let i=0;i<14;i++) spawnParticle(x,y,rand(0,Math.PI*2),rand(40,220),'212,175,55',rand(0.2,0.5),rand(2,4));
   return true;
 }
 
 /* ================= 副地图兄弟 ================= */
 function makeWorker(x, y) {
   return {
-    x: x !== undefined ? x : SUBMAP_CENTER_X + rand(-80, 80),
-    y: y !== undefined ? y : SUBMAP_CENTER_Y + rand(-80, 80),
-    r: 11,
-    state: 'idle',
-    targetNode: null,
-    collectTimer: 0,
-    angle: 0,
-    bob: rand(0, Math.PI * 2),
+    x: x!==undefined?x:SUBMAP_CENTER_X+rand(-80,80),
+    y: y!==undefined?y:SUBMAP_CENTER_Y+rand(-80,80),
+    r:11, hp:WORKER_MAX_HP, maxHp:WORKER_MAX_HP,
+    state:'idle', targetNode:null, collectTimer:0,
+    angle:0, bob:rand(0,Math.PI*2), hurtT:0
   };
 }
 
 /* ================= 键鼠 ================= */
 const keys = {};
-let mouse = { x: 0, y: 0, down: false };
+let mouse = { x:0, y:0, down:false };
 
 window.addEventListener('keydown', e => {
   keys[e.code] = true;
   if (e.code === 'Space') e.preventDefault();
-  if (gameOver && e.code === 'KeyR' && currentMap === 'city') init();
+  if (gameOver && e.code === 'KeyR' && currentMap === 'city' && screen === 'game') init();
   if (pausedForUpgrade && currentMap === 'city') {
     if (e.code === 'Digit1') selectUpgrade(0);
     if (e.code === 'Digit2') selectUpgrade(1);
@@ -243,17 +318,11 @@ function resetSticks() {
 }
 
 function updateStick(s, x, y) {
-  let dx = x - s.baseX;
-  let dy = y - s.baseY;
+  let dx = x - s.baseX, dy = y - s.baseY;
   const d = Math.hypot(dx, dy);
-  if (d > STICK_RADIUS) {
-    dx = (dx / d) * STICK_RADIUS;
-    dy = (dy / d) * STICK_RADIUS;
-  }
-  s.curX = s.baseX + dx;
-  s.curY = s.baseY + dy;
-  s.dx = dx / STICK_RADIUS;
-  s.dy = dy / STICK_RADIUS;
+  if (d > STICK_RADIUS) { dx = (dx/d)*STICK_RADIUS; dy = (dy/d)*STICK_RADIUS; }
+  s.curX = s.baseX + dx; s.curY = s.baseY + dy;
+  s.dx = dx / STICK_RADIUS; s.dy = dy / STICK_RADIUS;
 }
 
 function onTouchStart(e) {
@@ -266,31 +335,24 @@ function onTouchStart(e) {
     handleClick(t.clientX, t.clientY);
   }
 
-  if (shopOpen || pausedForUpgrade || gameOver || currentMap !== 'city') return;
+  if (screen !== 'game' || shopOpen || pausedForUpgrade || gameOver || currentMap !== 'city') return;
 
   for (const t of e.changedTouches) {
     const x = t.clientX, y = t.clientY;
-
-    if (dist(x, y, dashBtn.x, dashBtn.y) < dashBtn.r + 10) {
-      tryDash();
-      continue;
-    }
-
-    if (x < W / 2) {
+    if (dist(x, y, dashBtn.x, dashBtn.y) < dashBtn.r + 10) { tryDash(); continue; }
+    if (x < W/2) {
       if (!moveStick.active) {
-        moveStick.active = true;
-        moveStick.id = t.identifier;
+        moveStick.active = true; moveStick.id = t.identifier;
         moveStick.baseX = x; moveStick.baseY = y;
-        moveStick.curX = x;  moveStick.curY = y;
-        moveStick.dx = 0;    moveStick.dy = 0;
+        moveStick.curX = x; moveStick.curY = y;
+        moveStick.dx = 0; moveStick.dy = 0;
       }
     } else {
       if (!aimStick.active) {
-        aimStick.active = true;
-        aimStick.id = t.identifier;
+        aimStick.active = true; aimStick.id = t.identifier;
         aimStick.baseX = x; aimStick.baseY = y;
-        aimStick.curX = x;  aimStick.curY = y;
-        aimStick.dx = 0;    aimStick.dy = 0;
+        aimStick.curX = x; aimStick.curY = y;
+        aimStick.dx = 0; aimStick.dy = 0;
       }
     }
   }
@@ -300,25 +362,16 @@ function onTouchMove(e) {
   e.preventDefault();
   lastTouchTime = performance.now();
   for (const t of e.changedTouches) {
-    if (moveStick.active && t.identifier === moveStick.id) {
-      updateStick(moveStick, t.clientX, t.clientY);
-    } else if (aimStick.active && t.identifier === aimStick.id) {
-      updateStick(aimStick, t.clientX, t.clientY);
-    }
+    if (moveStick.active && t.identifier === moveStick.id) updateStick(moveStick, t.clientX, t.clientY);
+    else if (aimStick.active && t.identifier === aimStick.id) updateStick(aimStick, t.clientX, t.clientY);
   }
 }
 
 function onTouchEnd(e) {
   e.preventDefault();
   for (const t of e.changedTouches) {
-    if (moveStick.active && t.identifier === moveStick.id) {
-      moveStick.active = false; moveStick.id = null;
-      moveStick.dx = 0; moveStick.dy = 0;
-    }
-    if (aimStick.active && t.identifier === aimStick.id) {
-      aimStick.active = false; aimStick.id = null;
-      aimStick.dx = 0; aimStick.dy = 0;
-    }
+    if (moveStick.active && t.identifier === moveStick.id) { moveStick.active = false; moveStick.id = null; moveStick.dx = 0; moveStick.dy = 0; }
+    if (aimStick.active && t.identifier === aimStick.id) { aimStick.active = false; aimStick.id = null; aimStick.dx = 0; aimStick.dy = 0; }
   }
 }
 
@@ -336,26 +389,26 @@ function initAudio() {
     const len = Math.floor(actx.sampleRate * 0.4);
     noiseBuf = actx.createBuffer(1, len, actx.sampleRate);
     const d = noiseBuf.getChannelData(0);
-    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    for (let i=0;i<len;i++) d[i] = Math.random()*2-1;
   } catch (e) { actx = null; }
 }
 function sfxShot(vol, pitch) {
   if (!actx) return;
-  vol = vol || 0.13; pitch = pitch || 1;
+  vol = vol||0.13; pitch = pitch||1;
   const t = actx.currentTime;
   const src = actx.createBufferSource();
   src.buffer = noiseBuf;
   src.playbackRate.value = pitch;
   const f = actx.createBiquadFilter();
   f.type = 'bandpass';
-  f.frequency.setValueAtTime(1700 * pitch, t);
-  f.frequency.exponentialRampToValueAtTime(380, t + 0.09);
+  f.frequency.setValueAtTime(1700*pitch, t);
+  f.frequency.exponentialRampToValueAtTime(380, t+0.09);
   f.Q.value = 0.7;
   const g = actx.createGain();
   g.gain.setValueAtTime(vol, t);
-  g.gain.exponentialRampToValueAtTime(0.001, t + 0.13);
+  g.gain.exponentialRampToValueAtTime(0.001, t+0.13);
   src.connect(f); f.connect(g); g.connect(actx.destination);
-  src.start(t); src.stop(t + 0.16);
+  src.start(t); src.stop(t+0.16);
 }
 function sfxHit(vol) {
   if (!actx) return;
@@ -363,12 +416,12 @@ function sfxHit(vol) {
   const o = actx.createOscillator();
   o.type = 'square';
   o.frequency.setValueAtTime(220, t);
-  o.frequency.exponentialRampToValueAtTime(60, t + 0.08);
+  o.frequency.exponentialRampToValueAtTime(60, t+0.08);
   const g = actx.createGain();
-  g.gain.setValueAtTime(vol || 0.08, t);
-  g.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+  g.gain.setValueAtTime(vol||0.08, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t+0.1);
   o.connect(g); g.connect(actx.destination);
-  o.start(t); o.stop(t + 0.12);
+  o.start(t); o.stop(t+0.12);
 }
 function sfxCash() {
   if (!actx) return;
@@ -376,12 +429,42 @@ function sfxCash() {
   const o = actx.createOscillator();
   o.type = 'triangle';
   o.frequency.setValueAtTime(880, t);
-  o.frequency.setValueAtTime(1320, t + 0.06);
+  o.frequency.setValueAtTime(1320, t+0.06);
   const g = actx.createGain();
   g.gain.setValueAtTime(0.1, t);
-  g.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+  g.gain.exponentialRampToValueAtTime(0.001, t+0.18);
   o.connect(g); g.connect(actx.destination);
-  o.start(t); o.stop(t + 0.2);
+  o.start(t); o.stop(t+0.2);
+}
+function sfxWhip() {
+  if (!actx) return;
+  const t = actx.currentTime;
+  const src = actx.createBufferSource();
+  src.buffer = noiseBuf;
+  src.playbackRate.value = 2.5;
+  const f = actx.createBiquadFilter();
+  f.type = 'highpass';
+  f.frequency.setValueAtTime(2000, t);
+  f.frequency.exponentialRampToValueAtTime(500, t+0.08);
+  const g = actx.createGain();
+  g.gain.setValueAtTime(0.18, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t+0.12);
+  src.connect(f); f.connect(g); g.connect(actx.destination);
+  src.start(t); src.stop(t+0.14);
+}
+function sfxFaith() {
+  if (!actx) return;
+  const t = actx.currentTime;
+  [523, 659, 784].forEach((freq, i) => {
+    const o = actx.createOscillator();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(freq, t + i*0.04);
+    const g = actx.createGain();
+    g.gain.setValueAtTime(0.06, t + i*0.04);
+    g.gain.exponentialRampToValueAtTime(0.001, t + i*0.04 + 0.2);
+    o.connect(g); g.connect(actx.destination);
+    o.start(t + i*0.04); o.stop(t + i*0.04 + 0.22);
+  });
 }
 
 /* ================= 光晕 ================= */
@@ -389,42 +472,33 @@ const glowCanvas = document.createElement('canvas');
 glowCanvas.width = glowCanvas.height = 256;
 (function () {
   const g2 = glowCanvas.getContext('2d');
-  const grd = g2.createRadialGradient(128, 128, 0, 128, 128, 128);
+  const grd = g2.createRadialGradient(128,128,0,128,128,128);
   grd.addColorStop(0, 'rgba(255,196,120,0.55)');
   grd.addColorStop(0.35, 'rgba(255,170,90,0.20)');
   grd.addColorStop(1, 'rgba(255,150,60,0)');
   g2.fillStyle = grd;
-  g2.fillRect(0, 0, 256, 256);
+  g2.fillRect(0,0,256,256);
 })();
 
 let vignette = null;
 function buildVignette() {
-  const grd = ctx.createRadialGradient(
-    W / 2, H / 2, Math.min(W, H) * 0.28,
-    W / 2, H / 2, Math.max(W, H) * 0.78
-  );
+  const grd = ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.28, W/2,H/2,Math.max(W,H)*0.78);
   grd.addColorStop(0, 'rgba(0,0,0,0)');
   grd.addColorStop(0.6, 'rgba(0,0,0,0.35)');
   grd.addColorStop(1, 'rgba(0,0,0,0.88)');
   vignette = grd;
 }
 
-/* ================= 主城世界（南方小镇） ================= */
+/* ================= 世界生成 ================= */
 function makeBuilding(x, y, w, h) {
-  // 19世纪南方木屋/砖房的色调
-  const tints = ['#2e241c', '#352a1f', '#28221c', '#332a1e', '#2b2620', '#383028', '#302a20'];
-  const b = { x, y, w, h, col: pick(tints), details: [] };
-  const n = randInt(1, 3);
-  for (let i = 0; i < n; i++) {
-    const dw = rand(12, Math.min(46, w * 0.45));
-    const dh = rand(12, Math.min(46, h * 0.45));
-    if (w - dw < 20 || h - dh < 20) continue;
-    b.details.push({
-      x: x + rand(8, w - dw - 8),
-      y: y + rand(8, h - dh - 8),
-      w: dw, h: dh,
-      t: Math.random() < 0.55 ? 'vent' : 'sky'
-    });
+  const tints = ['#2e241c','#352a1f','#28221c','#332a1e','#2b2620','#383028','#302a20'];
+  const b = { x,y,w,h, col: pick(tints), details:[] };
+  const n = randInt(1,3);
+  for (let i=0;i<n;i++) {
+    const dw = rand(12, Math.min(46, w*0.45));
+    const dh = rand(12, Math.min(46, h*0.45));
+    if (w-dw < 20 || h-dh < 20) continue;
+    b.details.push({ x:x+rand(8,w-dw-8), y:y+rand(8,h-dh-8), w:dw, h:dh, t: Math.random()<0.55?'vent':'sky' });
   }
   return b;
 }
@@ -432,81 +506,59 @@ function makeBuilding(x, y, w, h) {
 function genWorld() {
   buildings = [];
   lamps = [];
-  for (let bx = 0; bx < GRID_N; bx++) {
-    for (let by = 0; by < GRID_N; by++) {
-      const x0 = bx * BLOCK + ROAD / 2;
-      const y0 = by * BLOCK + ROAD / 2;
-      const size = BLOCK - ROAD;
-      const cw = size / 2, ch = size / 2;
-      for (let i = 0; i < 2; i++) {
-        for (let j = 0; j < 2; j++) {
-          const px = rand(16, 34);
-          const py = rand(16, 34);
-          const x = x0 + i * cw + px;
-          const y = y0 + j * ch + py;
-          const w = cw - px * 2;
-          const h = ch - py * 2;
-          if (w < 44 || h < 44) continue;
-          buildings.push(makeBuilding(x, y, w, h));
-        }
+  for (let bx=0;bx<GRID_N;bx++) {
+    for (let by=0;by<GRID_N;by++) {
+      const x0 = bx*BLOCK + ROAD/2, y0 = by*BLOCK + ROAD/2;
+      const size = BLOCK - ROAD, cw = size/2, ch = size/2;
+      for (let i=0;i<2;i++) for (let j=0;j<2;j++) {
+        const px = rand(16,34), py = rand(16,34);
+        const x = x0 + i*cw + px, y = y0 + j*ch + py;
+        const w = cw - px*2, h = ch - py*2;
+        if (w < 44 || h < 44) continue;
+        buildings.push(makeBuilding(x,y,w,h));
       }
     }
   }
-  for (let bx = 0; bx <= GRID_N; bx++) {
-    for (let by = 0; by <= GRID_N; by++) {
-      lamps.push({ x: bx * BLOCK, y: by * BLOCK });
-    }
-  }
+  for (let bx=0;bx<=GRID_N;bx++) for (let by=0;by<=GRID_N;by++) lamps.push({ x:bx*BLOCK, y:by*BLOCK });
 }
 
-/* ================= 副地图初始化 ================= */
 function initSubMap(mapState, type) {
   mapState.nodes = [];
-  const count = 16;
-  for (let i = 0; i < count; i++) {
+  for (let i=0;i<16;i++) {
     let x, y, tries = 0;
     do {
-      x = rand(160, FARM_MAP_W - 160);
-      y = rand(160, FARM_MAP_H - 160);
+      x = rand(160, FARM_MAP_W-160); y = rand(160, FARM_MAP_H-160);
       tries++;
-    } while (tries < 30 && dist(x, y, SUBMAP_CENTER_X, SUBMAP_CENTER_Y) < 180);
-    mapState.nodes.push({
-      x, y, r: 16, amount: 3, respawnTimer: 0, type
-    });
+    } while (tries < 30 && dist(x,y,SUBMAP_CENTER_X,SUBMAP_CENTER_Y) < 180);
+    mapState.nodes.push({ x, y, r:16, amount:3, respawnTimer:0, type });
   }
   mapState.lastUpdate = performance.now();
 }
 
 /* ================= 运送队列 ================= */
 function addTransport(type, opts) {
-  transports.push(Object.assign({
-    type, timer: TRANSPORT_TIME, maxTime: TRANSPORT_TIME
-  }, opts || {}));
+  transports.push(Object.assign({ type, timer:TRANSPORT_TIME, maxTime:TRANSPORT_TIME }, opts||{}));
 }
 
 function updateTransports(dt) {
-  for (let i = transports.length - 1; i >= 0; i--) {
+  for (let i=transports.length-1;i>=0;i--) {
     const t = transports[i];
     t.timer -= dt;
     if (t.timer <= 0) {
-      if (t.type === 'ally-to-farm') {
-        for (let j = 0; j < t.count; j++) farm.allies.push(makeWorker());
-      } else if (t.type === 'ally-to-mine') {
-        for (let j = 0; j < t.count; j++) mine.allies.push(makeWorker());
-      } else if (t.type === 'ally-to-city') {
+      if (t.type === 'ally-to-farm') for (let j=0;j<t.count;j++) farm.allies.push(makeWorker());
+      else if (t.type === 'ally-to-mine') for (let j=0;j<t.count;j++) mine.allies.push(makeWorker());
+      else if (t.type === 'ally-to-city') {
         const space = MAX_ALLIES - allies.length;
         const actual = Math.min(t.count, space);
-        for (let j = 0; j < actual; j++) {
-          addAlly(player.x + rand(-40, 40), player.y + rand(-40, 40));
-        }
+        for (let j=0;j<actual;j++) addAlly(player.x+rand(-40,40), player.y+rand(-40,40));
         const extra = t.count - actual;
         if (extra > 0) {
           const back = t.from === 'farm' ? farm : mine;
-          for (let j = 0; j < extra; j++) back.allies.push(makeWorker());
+          for (let j=0;j<extra;j++) back.allies.push(makeWorker());
         }
       } else if (t.type === 'resource') {
-        const price = t.resourceType === 'cotton' ? 8 : 15;
-        money += Math.floor(t.amount * price);
+        const cfg = t.resourceType === 'farm' ? mode.subMaps.farm : mode.subMaps.mine;
+        money += Math.floor(t.amount * cfg.price);
         sfxCash();
       }
       transports.splice(i, 1);
@@ -514,10 +566,58 @@ function updateTransports(dt) {
   }
 }
 
+/* ================= 加速按钮 ================= */
+function useBoost(mapState) {
+  const boost = mode.boost;
+  if (mapState.boostCooldown > 0) return;
+
+  if (boost.type === 'whip') {
+    if (mapState.allies.length === 0) return;
+    mapState.boostStacks = Math.min(mapState.boostStacks+1, boost.maxStacks);
+    mapState.boostTimer = boost.duration;
+    mapState.whipFlash = 0.45;
+    sfxWhip();
+    for (const a of mapState.allies) {
+      a.hp -= boost.hpCost;
+      a.hurtT = 0.45;
+      for (let k=0;k<6;k++) spawnParticle(a.x, a.y, rand(-Math.PI*0.8,-Math.PI*0.2), rand(60,200), '200,30,20', rand(0.3,0.6), rand(2,4));
+      for (let k=0;k<4;k++) spawnParticle(a.x, a.y-a.r-6, rand(0,Math.PI*2), rand(80,160), '255,220,180', rand(0.15,0.3), rand(1.5,3));
+      if (a.hp <= 0) { a.hp = 0; a.dead = true; }
+    }
+  } else if (boost.type === 'money') {
+    if (money < boost.cost) return;
+    money -= boost.cost;
+    mapState.boostStacks = Math.min(mapState.boostStacks+1, boost.maxStacks);
+    mapState.boostTimer = boost.duration;
+    mapState.whipFlash = 0.25;
+    sfxCash();
+  } else if (boost.type === 'faith') {
+    mapState.boostCooldown = boost.cooldown;
+    mapState.boostStacks = Math.min(mapState.boostStacks+1, boost.maxStacks);
+    mapState.boostTimer = boost.duration;
+    mapState.whipFlash = 0.2;
+    sfxFaith();
+  }
+}
+
 /* ================= 副地图生产 ================= */
 function updateSubMapAllies(mapState, dt) {
+  if (mapState.boostTimer > 0) {
+    mapState.boostTimer -= dt;
+    if (mapState.boostTimer <= 0) { mapState.boostTimer = 0; mapState.boostStacks = 0; }
+  }
+  if (mapState.boostCooldown > 0) mapState.boostCooldown -= dt;
+  if (mapState.whipFlash > 0) mapState.whipFlash -= dt;
+
+  const boost = mode.boost;
+  const speedMult = 1 + boost.boostPerStack * mapState.boostStacks;
+  const collectTime = COLLECT_TIME / speedMult;
+
   for (const a of mapState.allies) {
     a.bob += dt * 6;
+    if (a.hurtT > 0) a.hurtT -= dt;
+    if (a.hp < a.maxHp) a.hp = Math.min(a.maxHp, a.hp + 3*dt);
+
     if (a.state === 'idle') {
       let nearest = null, nd = Infinity;
       for (const n of mapState.nodes) {
@@ -525,25 +625,15 @@ function updateSubMapAllies(mapState, dt) {
         const d = dist(a.x, a.y, n.x, n.y);
         if (d < nd) { nd = d; nearest = n; }
       }
-      if (nearest) {
-        a.targetNode = nearest;
-        a.state = 'moving';
-      }
+      if (nearest) { a.targetNode = nearest; a.state = 'moving'; }
     } else if (a.state === 'moving') {
-      if (!a.targetNode || a.targetNode.amount <= 0) {
-        a.state = 'idle';
-        a.targetNode = null;
-        continue;
-      }
+      if (!a.targetNode || a.targetNode.amount <= 0) { a.state = 'idle'; a.targetNode = null; continue; }
       const d = dist(a.x, a.y, a.targetNode.x, a.targetNode.y);
-      if (d < a.r + a.targetNode.r + 4) {
-        a.state = 'collecting';
-        a.collectTimer = COLLECT_TIME;
-      } else {
-        const ang = Math.atan2(a.targetNode.y - a.y, a.targetNode.x - a.x);
-        a.x += Math.cos(ang) * 130 * dt;
-        a.y += Math.sin(ang) * 130 * dt;
-        a.angle = ang;
+      if (d < a.r + a.targetNode.r + 4) { a.state = 'collecting'; a.collectTimer = collectTime; }
+      else {
+        const ang = Math.atan2(a.targetNode.y-a.y, a.targetNode.x-a.x);
+        const spd = 130 * speedMult;
+        a.x += Math.cos(ang)*spd*dt; a.y += Math.sin(ang)*spd*dt; a.angle = ang;
       }
     } else if (a.state === 'collecting') {
       a.collectTimer -= dt;
@@ -551,15 +641,21 @@ function updateSubMapAllies(mapState, dt) {
         if (a.targetNode && a.targetNode.amount > 0) {
           a.targetNode.amount--;
           mapState.warehouse++;
-          if (a.targetNode.amount <= 0) {
-            a.targetNode.respawnTimer = NODE_RESPAWN;
-          }
+          if (a.targetNode.amount <= 0) a.targetNode.respawnTimer = NODE_RESPAWN;
         }
-        a.state = 'idle';
-        a.targetNode = null;
+        a.state = 'idle'; a.targetNode = null;
       }
     }
   }
+
+  for (let i=mapState.allies.length-1;i>=0;i--) {
+    if (mapState.allies[i].dead) {
+      const a = mapState.allies[i];
+      for (let k=0;k<12;k++) spawnParticle(a.x, a.y, rand(0,Math.PI*2), rand(40,200), '120,70,40', rand(0.3,0.7), rand(2,4));
+      mapState.allies.splice(i, 1);
+    }
+  }
+
   for (const n of mapState.nodes) {
     if (n.amount <= 0) {
       n.respawnTimer -= dt;
@@ -572,13 +668,10 @@ function calcOffline(mapState) {
   const now = performance.now();
   const elapsed = (now - mapState.lastUpdate) / 1000;
   if (elapsed > 0.05) {
-    const rate = 0.30;
-    mapState.warehouse += mapState.allies.length * rate * elapsed;
+    mapState.warehouse += mapState.allies.length * 0.30 * elapsed;
+    mapState.boostStacks = 0; mapState.boostTimer = 0; mapState.boostCooldown = 0;
     for (const n of mapState.nodes) {
-      if (n.amount <= 0) {
-        n.respawnTimer -= elapsed;
-        if (n.respawnTimer <= 0) n.amount = 3;
-      }
+      if (n.amount <= 0) { n.respawnTimer -= elapsed; if (n.respawnTimer <= 0) n.amount = 3; }
     }
   }
   mapState.lastUpdate = now;
@@ -587,57 +680,34 @@ function calcOffline(mapState) {
 /* ================= 场景切换 ================= */
 function switchMap(target) {
   if (target === currentMap) return;
-
   if (currentMap === 'farm') calcOffline(farm);
   if (currentMap === 'mine') calcOffline(mine);
-
   currentMap = target;
   shopOpen = false;
   resetSticks();
-
-  if (target === 'farm') {
-    farm.lastUpdate = performance.now();
-  } else if (target === 'mine') {
-    mine.lastUpdate = performance.now();
-  } else if (target === 'city') {
-    cam.x = player.x;
-    cam.y = player.y;
-  }
+  if (target === 'farm') farm.lastUpdate = performance.now();
+  else if (target === 'mine') mine.lastUpdate = performance.now();
+  else if (target === 'city') { cam.x = player.x; cam.y = player.y; }
 }
 
-/* ================= 商店 / 按钮逻辑 ================= */
+/* ================= 商店逻辑 ================= */
 function buyBullets() {
   if (money < 20) return;
-  money -= 20;
-  player.mag += 15;
-  player.ammo = player.mag;
-  sfxCash();
+  money -= 20; player.mag += 15; player.ammo = player.mag; sfxCash();
 }
 function buyHealth() {
   if (money < 15) return;
-  money -= 15;
-  player.hp = Math.min(player.maxHp, player.hp + 30);
-  sfxCash();
+  money -= 15; player.hp = Math.min(player.maxHp, player.hp+30); sfxCash();
 }
 function buyAlly() {
-  if (money < 50) return;
+  if (money < ALLY_PRICE) return;
   if (allies.length >= MAX_ALLIES) return;
-  money -= 50;
-  addAlly(player.x + rand(-40, 40), player.y + rand(-40, 40));
+  money -= ALLY_PRICE;
+  addAlly(player.x+rand(-40,40), player.y+rand(-40,40));
   sfxCash();
 }
-function sendAllyToFarm() {
-  if (allies.length === 0) return;
-  const a = allies.pop();
-  a.dead = true;
-  addTransport('ally-to-farm', { count: 1 });
-}
-function sendAllyToMine() {
-  if (allies.length === 0) return;
-  const a = allies.pop();
-  a.dead = true;
-  addTransport('ally-to-mine', { count: 1 });
-}
+function sendAllyToFarm() { if (allies.length === 0) return; allies.pop().dead = true; addTransport('ally-to-farm', { count:1 }); }
+function sendAllyToMine() { if (allies.length === 0) return; allies.pop().dead = true; addTransport('ally-to-mine', { count:1 }); }
 
 function shipResources(mapState, resourceType) {
   const amount = Math.floor(mapState.warehouse);
@@ -653,139 +723,154 @@ function recallAllies(mapState, from) {
   addTransport('ally-to-city', { count, from });
 }
 
+/* ================= 开始页面布局 ================= */
+function getStartLayout() {
+  const modes = [MODES.south1835, MODES.britain, MODES.germany];
+  const cardW = Math.min(360, W - 40);
+  const cardH = Math.min(108, H * 0.17);
+  const gap = 14;
+  const totalH = modes.length * cardH + (modes.length-1) * gap;
+  const startY = (H - totalH) / 2 + 20;
+  const cards = [];
+  for (let i=0;i<modes.length;i++) {
+    cards.push({ x:(W-cardW)/2, y:startY+i*(cardH+gap), w:cardW, h:cardH, mode:modes[i] });
+  }
+  return { cards, cardW, cardH, gap };
+}
+
 /* ================= 点击处理 ================= */
 function handleClick(x, y) {
+  if (screen === 'start') {
+    const L = getStartLayout();
+    for (const c of L.cards) {
+      if (x > c.x && x < c.x+c.w && y > c.y && y < c.y+c.h) {
+        mode = c.mode;
+        screen = 'game';
+        initAudio();
+        init();
+        return;
+      }
+    }
+    return;
+  }
+
   const topY = 14;
   const btnW = 78, btnH = 34, gap = 8;
   const startX = 18;
   const mapBtns = [
-    { label: '小镇', target: 'city' },
-    { label: '棉花农场', target: 'farm' },
-    { label: '金矿矿洞', target: 'mine' }
+    { label:'主城', target:'city' },
+    { label: mode.subMaps.farm.shortName, target:'farm' },
+    { label: mode.subMaps.mine.shortName, target:'mine' }
   ];
-  for (let i = 0; i < mapBtns.length; i++) {
-    const bx = startX + i * (btnW + gap);
-    if (x > bx && x < bx + btnW && y > topY && y < topY + btnH) {
+  for (let i=0;i<mapBtns.length;i++) {
+    const bx = startX + i*(btnW+gap);
+    if (x > bx && x < bx+btnW && y > topY && y < topY+btnH) {
       switchMap(mapBtns[i].target);
       return;
     }
   }
 
-  const shopBtnX = W - 120, shopBtnY = 14, shopBtnW = 100, shopBtnH = 34;
-  if (x > shopBtnX && x < shopBtnX + shopBtnW && y > shopBtnY && y < shopBtnY + shopBtnH) {
+  const shopBtnX = W-120, shopBtnY = 14, shopBtnW = 100, shopBtnH = 34;
+  if (x > shopBtnX && x < shopBtnX+shopBtnW && y > shopBtnY && y < shopBtnY+shopBtnH) {
     shopOpen = !shopOpen;
     return;
   }
 
   if (shopOpen) {
-    const panelW = Math.min(420, W - 40);
-    const panelH = 390;
-    const px = (W - panelW) / 2;
-    const py = (H - panelH) / 2;
-
-    if (x > px + panelW - 46 && x < px + panelW - 10 && y > py + 10 && y < py + 42) {
-      shopOpen = false;
-      return;
-    }
-
+    const panelW = Math.min(420, W-40);
+    const panelH = 450;
+    const px = (W-panelW)/2, py = (H-panelH)/2;
+    if (x > px+panelW-46 && x < px+panelW-10 && y > py+10 && y < py+42) { shopOpen = false; return; }
     const itemH = 58;
     const items = [
-      { action: buyBullets, label: '补充弹药 15发' },
-      { action: buyHealth, label: '草药酒 +30' },
-      { action: buyAlly, label: '雇佣黑人兄弟' },
-      { action: sendAllyToFarm, label: '派遣兄弟→棉花农场' },
-      { action: sendAllyToMine, label: '派遣兄弟→金矿矿洞' },
+      { action: buyBullets, label:'补充弹药 15发' },
+      { action: buyHealth, label:'草药酒 +30' },
+      { action: buyAlly, label:'雇佣兄弟' },
+      { action: sendAllyToFarm, label:'派遣→'+mode.subMaps.farm.name },
+      { action: sendAllyToMine, label:'派遣→'+mode.subMaps.mine.name },
+      { action: () => { screen = 'start'; shopOpen = false; }, label:'返回模式选择' }
     ];
     const startY = py + 70;
-    for (let i = 0; i < items.length; i++) {
-      const iy = startY + i * (itemH + 8);
-      if (x > px + 24 && x < px + panelW - 24 && y > iy && y < iy + itemH) {
-        items[i].action();
-        return;
-      }
+    for (let i=0;i<items.length;i++) {
+      const iy = startY + i*(itemH+8);
+      if (x > px+24 && x < px+panelW-24 && y > iy && y < iy+itemH) { items[i].action(); return; }
     }
     return;
   }
 
   if (currentMap === 'farm' || currentMap === 'mine') {
     const mapState = currentMap === 'farm' ? farm : mine;
-    const resourceType = currentMap === 'farm' ? 'cotton' : 'gold';
-    const btnW2 = Math.min(180, W * 0.4);
+    const resourceType = currentMap === 'farm' ? 'farm' : 'mine';
+    const btnW2 = Math.min(180, W*0.4);
     const btnH2 = 48;
-    const bx1 = 30, by1 = H - 70;
-    const bx2 = W - btnW2 - 30, by2 = H - 70;
+    const bx1 = 30, by1 = H-70;
+    const bx2 = W-btnW2-30, by2 = H-70;
 
-    if (x > bx1 && x < bx1 + btnW2 && y > by1 && y < by1 + btnH2) {
-      shipResources(mapState, resourceType);
+    const boostBtnW = Math.min(280, W*0.58);
+    const boostBtnH = 50;
+    const boostBtnX = (W-boostBtnW)/2;
+    const boostBtnY = 112;
+    if (x > boostBtnX && x < boostBtnX+boostBtnW && y > boostBtnY && y < boostBtnY+boostBtnH) {
+      useBoost(mapState);
       return;
     }
-    if (x > bx2 && x < bx2 + btnW2 && y > by2 && y < by2 + btnH2) {
-      recallAllies(mapState, currentMap);
-      return;
-    }
+
+    if (x > bx1 && x < bx1+btnW2 && y > by1 && y < by1+btnH2) { shipResources(mapState, resourceType); return; }
+    if (x > bx2 && x < bx2+btnW2 && y > by2 && y < by2+btnH2) { recallAllies(mapState, currentMap); return; }
   }
 
   if (pausedForUpgrade && upgradeUI && currentMap === 'city') {
     const L = getUpgradeLayout();
-    for (let i = 0; i < L.rects.length; i++) {
+    for (let i=0;i<L.rects.length;i++) {
       const r = L.rects[i];
-      if (x > r.x && x < r.x + r.w && y > r.y && y < r.y + r.h) {
-        selectUpgrade(i);
-        return;
-      }
+      if (x > r.x && x < r.x+r.w && y > r.y && y < r.y+r.h) { selectUpgrade(i); return; }
     }
   }
 
   if (gameOver && currentMap === 'city') {
-    if (x > W / 2 - 130 && x < W / 2 + 130 && y > H / 2 + 40 && y < H / 2 + 120) {
-      init();
-    }
+    if (x > W/2-130 && x < W/2+130 && y > H/2+40 && y < H/2+120) init();
   }
 }
 
 /* ================= 碰撞 / 视线 ================= */
 function pointInBuilding(x, y) {
-  for (let i = 0; i < buildings.length; i++) {
+  for (let i=0;i<buildings.length;i++) {
     const b = buildings[i];
-    if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) return true;
+    if (x >= b.x && x <= b.x+b.w && y >= b.y && y <= b.y+b.h) return true;
   }
   return false;
 }
 
 function pushOut(o, r) {
-  for (let i = 0; i < buildings.length; i++) {
+  for (let i=0;i<buildings.length;i++) {
     const b = buildings[i];
-    if (o.x + r < b.x || o.x - r > b.x + b.w || o.y + r < b.y || o.y - r > b.y + b.h) continue;
-    const cx = clamp(o.x, b.x, b.x + b.w);
-    const cy = clamp(o.y, b.y, b.y + b.h);
-    const dx = o.x - cx, dy = o.y - cy;
-    const d2 = dx * dx + dy * dy;
-    if (d2 < r * r) {
+    if (o.x+r < b.x || o.x-r > b.x+b.w || o.y+r < b.y || o.y-r > b.y+b.h) continue;
+    const cx = clamp(o.x, b.x, b.x+b.w);
+    const cy = clamp(o.y, b.y, b.y+b.h);
+    const dx = o.x-cx, dy = o.y-cy;
+    const d2 = dx*dx + dy*dy;
+    if (d2 < r*r) {
       if (d2 > 0.0001) {
         const d = Math.sqrt(d2);
-        o.x += (dx / d) * (r - d);
-        o.y += (dy / d) * (r - d);
+        o.x += (dx/d)*(r-d); o.y += (dy/d)*(r-d);
       } else {
-        const l = o.x - b.x, rr = b.x + b.w - o.x;
-        const t = o.y - b.y, bb = b.y + b.h - o.y;
-        const m = Math.min(l, rr, t, bb);
-        if (m === l) o.x = b.x - r;
-        else if (m === rr) o.x = b.x + b.w + r;
-        else if (m === t) o.y = b.y - r;
-        else o.y = b.y + b.h + r;
+        const l = o.x-b.x, rr = b.x+b.w-o.x, t = o.y-b.y, bb = b.y+b.h-o.y;
+        const m = Math.min(l,rr,t,bb);
+        if (m === l) o.x = b.x-r; else if (m === rr) o.x = b.x+b.w+r;
+        else if (m === t) o.y = b.y-r; else o.y = b.y+b.h+r;
       }
     }
   }
-  o.x = clamp(o.x, r, WORLD - r);
-  o.y = clamp(o.y, r, WORLD - r);
+  o.x = clamp(o.x, r, WORLD-r);
+  o.y = clamp(o.y, r, WORLD-r);
 }
 
 function hasLineOfSight(x1, y1, x2, y2) {
-  const d = Math.hypot(x2 - x1, y2 - y1);
-  const steps = Math.ceil(d / 45);
-  for (let i = 1; i < steps; i++) {
-    const t = i / steps;
-    if (pointInBuilding(x1 + (x2 - x1) * t, y1 + (y2 - y1) * t)) return false;
+  const d = Math.hypot(x2-x1, y2-y1);
+  const steps = Math.ceil(d/45);
+  for (let i=1;i<steps;i++) {
+    const t = i/steps;
+    if (pointInBuilding(x1+(x2-x1)*t, y1+(y2-y1)*t)) return false;
   }
   return true;
 }
@@ -794,57 +879,31 @@ function hasLineOfSight(x1, y1, x2, y2) {
 const MAX_PARTICLES = isTouchMode ? 440 : 720;
 function spawnParticle(x, y, ang, spd, color, life, size) {
   if (particles.length > MAX_PARTICLES) return;
-  particles.push({
-    x, y,
-    vx: Math.cos(ang) * spd,
-    vy: Math.sin(ang) * spd,
-    life, maxLife: life,
-    color, size
-  });
+  particles.push({ x,y, vx:Math.cos(ang)*spd, vy:Math.sin(ang)*spd, life, maxLife:life, color, size });
 }
 
-/* ================= 敌人（1830年代南方） ================= */
-const enemyTemplates = [
-  { id: 'slavecatcher', name: '奴隶捕手',   color: '#4a3a2e', hp: 30,  speed: [100, 150], fire: [0.9, 1.8], dmg: 8,  range: 600 },
-  { id: 'overseer',     name: '种植园监工', color: '#6b2a1a', hp: 45,  speed: [80, 120],  fire: [1.1, 2.0], dmg: 10, range: 500 },
-  { id: 'militia',      name: '南方民兵',   color: '#2a3a5a', hp: 55,  speed: [70, 100],  fire: [1.3, 2.2], dmg: 11, range: 640 },
-  { id: 'bounty',       name: '赏金猎人',   color: '#6b5a2e', hp: 35,  speed: [130, 180], fire: [0.8, 1.5], dmg: 7,  range: 520 },
-  { id: 'gambler',      name: '赌徒',       color: '#5a2a4a', hp: 25,  speed: [160, 220], fire: [1.0, 1.8], dmg: 6,  range: 480 },
-];
-
+/* ================= 敌人 ================= */
 function makeEnemy(x, y, template) {
-  const t = template || pick(enemyTemplates);
+  const t = template || pick(mode.enemyTemplates);
   return {
-    x, y, r: 12,
-    hp: t.hp, maxHp: t.hp,
-    angle: 0,
+    x, y, r:12, hp:t.hp, maxHp:t.hp, angle:0,
     fireCd: rand(t.fire[0], t.fire[1]),
-    seeTimer: Math.random() * 0.2,
-    canSee: false,
-    alert: 0,
-    wanderT: 0,
-    wx: 0, wy: 0,
-    hurt: 0,
+    seeTimer: Math.random()*0.2, canSee:false, alert:0,
+    wanderT:0, wx:0, wy:0, hurt:0,
     speed: rand(t.speed[0], t.speed[1]),
-    template: t,
-    isElite: false,
+    template: t, isElite: false
   };
 }
 
 function spawnEnemy() {
-  for (let t = 0; t < 100; t++) {
-    const x = rand(160, WORLD - 160);
-    const y = rand(160, WORLD - 160);
+  for (let t=0;t<100;t++) {
+    const x = rand(160, WORLD-160), y = rand(160, WORLD-160);
     if (pointInBuilding(x, y)) continue;
-    if (dist(x, y, player.x, player.y) < 780) continue;
-
+    if (dist(x,y,player.x,player.y) < 780) continue;
     let e = makeEnemy(x, y);
     if (level >= 30 && Math.random() < 0.08) {
       e.isElite = true;
-      e.hp *= rand(5, 7);
-      e.maxHp = e.hp;
-      e.speed *= 1.3;
-      e.r = 16;
+      e.hp *= rand(5,7); e.maxHp = e.hp; e.speed *= 1.3; e.r = 16;
     }
     enemies.push(e);
     return;
@@ -852,159 +911,104 @@ function spawnEnemy() {
 }
 
 /* ================= 猎犬 / 冲刺 ================= */
-function addDrone() {
-  player.drones.push({ angle: rand(0, Math.PI * 2), dist: 48, fireCd: 0 });
-}
+function addDrone() { player.drones.push({ angle:rand(0,Math.PI*2), dist:48, fireCd:0 }); }
 
 function tryDash() {
   if (gameOver || pausedForUpgrade || currentMap !== 'city') return;
   if (player.dashCd > 0) return;
-
-  let dx = Math.cos(player.angle);
-  let dy = Math.sin(player.angle);
+  let dx = Math.cos(player.angle), dy = Math.sin(player.angle);
   if (moveStick.active) {
     const m = Math.hypot(moveStick.dx, moveStick.dy);
-    if (m > 0.15) { dx = moveStick.dx / m; dy = moveStick.dy / m; }
+    if (m > 0.15) { dx = moveStick.dx/m; dy = moveStick.dy/m; }
   } else if (!isTouchMode) {
-    let ax = 0, ay = 0;
-    if (keys['KeyW'] || keys['ArrowUp']) ay -= 1;
-    if (keys['KeyS'] || keys['ArrowDown']) ay += 1;
-    if (keys['KeyA'] || keys['ArrowLeft']) ax -= 1;
-    if (keys['KeyD'] || keys['ArrowRight']) ax += 1;
-    const l = Math.hypot(ax, ay);
-    if (l > 0) { dx = ax / l; dy = ay / l; }
+    let ax=0, ay=0;
+    if (keys['KeyW']||keys['ArrowUp']) ay -= 1;
+    if (keys['KeyS']||keys['ArrowDown']) ay += 1;
+    if (keys['KeyA']||keys['ArrowLeft']) ax -= 1;
+    if (keys['KeyD']||keys['ArrowRight']) ax += 1;
+    const l = Math.hypot(ax,ay);
+    if (l > 0) { dx = ax/l; dy = ay/l; }
   }
-
-  player.vx = dx * 1250;
-  player.vy = dy * 1250;
-  player.dashTime = 0.16;
-  player.dashCd = player.dashMaxCd;
+  player.vx = dx*1250; player.vy = dy*1250;
+  player.dashTime = 0.16; player.dashCd = player.dashMaxCd;
   shake = Math.max(shake, 4);
-  for (let i = 0; i < 10; i++) {
-    spawnParticle(player.x, player.y, Math.atan2(-dy, -dx) + rand(-0.7, 0.7),
-      rand(60, 240), '160,170,190', rand(0.15, 0.35), rand(2, 4));
-  }
+  for (let i=0;i<10;i++) spawnParticle(player.x, player.y, Math.atan2(-dy,-dx)+rand(-0.7,0.7), rand(60,240), '160,170,190', rand(0.15,0.35), rand(2,4));
 }
 
 /* ================= 战斗 ================= */
 function playerShoot() {
-  const a = player.angle + rand(-0.03, 0.03);
+  const a = player.angle + rand(-0.03,0.03);
   const sp = 1600;
   bullets.push({
-    x: player.x + Math.cos(a) * 20,
-    y: player.y + Math.sin(a) * 20,
-    vx: Math.cos(a) * sp,
-    vy: Math.sin(a) * sp,
-    life: 0.9,
-    dmg: player.bulletDmg,
-    friendly: true,
-    pierceLeft: player.pierce,
+    x: player.x+Math.cos(a)*20, y: player.y+Math.sin(a)*20,
+    vx: Math.cos(a)*sp, vy: Math.sin(a)*sp,
+    life:0.9, dmg:player.bulletDmg, friendly:true, pierceLeft:player.pierce
   });
   player.ammo--;
   player.fireCd = player.fireRate;
-  player.vx -= Math.cos(player.angle) * 58;
-  player.vy -= Math.sin(player.angle) * 58;
+  player.vx -= Math.cos(player.angle)*58;
+  player.vy -= Math.sin(player.angle)*58;
   shake = Math.max(shake, 2.3);
-
-  const mx = player.x + Math.cos(a) * 22;
-  const my = player.y + Math.sin(a) * 22;
-  for (let i = 0; i < 4; i++) {
-    spawnParticle(mx, my, a + rand(-0.55, 0.55), rand(120, 340), '255,205,120', rand(0.06, 0.14), rand(2, 4));
-  }
-  spawnParticle(player.x, player.y, a + Math.PI / 2 + rand(-0.3, 0.3), rand(120, 200), '210,170,90', 0.4, 2);
+  const mx = player.x+Math.cos(a)*22, my = player.y+Math.sin(a)*22;
+  for (let i=0;i<4;i++) spawnParticle(mx,my,a+rand(-0.55,0.55),rand(120,340),'255,205,120',rand(0.06,0.14),rand(2,4));
+  spawnParticle(player.x,player.y,a+Math.PI/2+rand(-0.3,0.3),rand(120,200),'210,170,90',0.4,2);
   sfxShot(0.13, 1);
 }
 
 function enemyShoot(e) {
-  const base = Math.atan2(player.y - e.y, player.x - e.x);
-  const a = base + rand(-0.13, 0.13);
+  const base = Math.atan2(player.y-e.y, player.x-e.x);
+  const a = base + rand(-0.13,0.13);
   const sp = e.isElite ? 950 : 830;
   bullets.push({
-    x: e.x + Math.cos(a) * 18,
-    y: e.y + Math.sin(a) * 18,
-    vx: Math.cos(a) * sp,
-    vy: Math.sin(a) * sp,
-    life: 1.7,
-    dmg: e.isElite ? e.template.dmg * 2 : e.template.dmg,
-    friendly: false
+    x: e.x+Math.cos(a)*18, y: e.y+Math.sin(a)*18,
+    vx: Math.cos(a)*sp, vy: Math.sin(a)*sp,
+    life:1.7, dmg: e.isElite ? e.template.dmg*2 : e.template.dmg, friendly:false
   });
-  for (let i = 0; i < 3; i++) {
-    spawnParticle(e.x + Math.cos(a) * 20, e.y + Math.sin(a) * 20, a + rand(-0.4, 0.4),
-      rand(80, 220), e.isElite ? '255,180,80' : '255,195,95', 0.11, 3);
-  }
-  sfxShot(0.05, e.isElite ? 0.7 : 0.82);
+  for (let i=0;i<3;i++) spawnParticle(e.x+Math.cos(a)*20, e.y+Math.sin(a)*20, a+rand(-0.4,0.4), rand(80,220), e.isElite?'255,180,80':'255,195,95', 0.11, 3);
+  sfxShot(0.05, e.isElite?0.7:0.82);
 }
 
 function damageEnemy(e, dmg, dirX, dirY) {
   if (e.dead) return;
   e.hp -= dmg;
-  e.hurt = 0.12;
-  e.alert = 3;
-  e.x += dirX * 9;
-  e.y += dirY * 9;
-  for (let i = 0; i < 5; i++) {
-    spawnParticle(e.x, e.y, Math.atan2(dirY, dirX) + rand(-0.9, 0.9),
-      rand(90, 320), e.isElite ? '255,200,80' : '190,30,30', rand(0.15, 0.4), rand(2, 4));
-  }
+  e.hurt = 0.12; e.alert = 3;
+  e.x += dirX*9; e.y += dirY*9;
+  for (let i=0;i<5;i++) spawnParticle(e.x,e.y,Math.atan2(dirY,dirX)+rand(-0.9,0.9),rand(90,320), e.isElite?'255,200,80':'190,30,30', rand(0.15,0.4), rand(2,4));
   sfxHit(0.05);
 
   if (e.hp <= 0) {
     e.dead = true;
-    kills++;
-    combo++;
-    comboTimer = 2.2;
-    shake = Math.max(shake, e.isElite ? 14 : 7);
-    gainXP(e.isElite ? 12 : 3);
-    money += e.isElite ? 20 : 5;
-
-    const n = e.isElite ? 30 : 18;
-    for (let i = 0; i < n; i++) {
-      spawnParticle(e.x, e.y, rand(0, Math.PI * 2), rand(60, 420),
-        i % 3 ? (e.isElite ? '220,180,60' : '160,25,25') : '90,15,15',
-        rand(0.2, 0.7), rand(2, 5));
-    }
-    addDecal(e.x, e.y, rand(14, 26));
-
+    kills++; combo++; comboTimer = 2.2;
+    shake = Math.max(shake, e.isElite?14:7);
+    gainXP(e.isElite?12:3);
+    money += e.isElite?20:5;
+    const n = e.isElite?30:18;
+    for (let i=0;i<n;i++) spawnParticle(e.x,e.y,rand(0,Math.PI*2),rand(60,420), i%3?(e.isElite?'220,180,60':'160,25,25'):'90,15,15', rand(0.2,0.7), rand(2,5));
+    addDecal(e.x, e.y, rand(14,26));
     if (e.isElite) {
       shake = 22;
-      for (let i = 0; i < 3; i++) {
-        bullets.push({
-          x: e.x, y: e.y,
-          vx: Math.cos(i * 2.09) * 400,
-          vy: Math.sin(i * 2.09) * 400,
-          life: 0.5, dmg: 0, friendly: false, isExplosion: true,
-        });
-      }
+      for (let i=0;i<3;i++) bullets.push({ x:e.x, y:e.y, vx:Math.cos(i*2.09)*400, vy:Math.sin(i*2.09)*400, life:0.5, dmg:0, friendly:false, isExplosion:true });
     }
-
-    if (Math.random() < 0.22) {
-      pickups.push({ x: e.x, y: e.y, type: 'hp', t: 0 });
-    } else if (Math.random() < 0.18) {
-      pickups.push({ x: e.x, y: e.y, type: 'ammo', t: 0 });
-    }
+    if (Math.random() < 0.22) pickups.push({ x:e.x, y:e.y, type:'hp', t:0 });
+    else if (Math.random() < 0.18) pickups.push({ x:e.x, y:e.y, type:'ammo', t:0 });
   }
 }
 
 function addDecal(x, y, r) {
   if (decals.length > 220) decals.shift();
-  decals.push({ x, y, r, a: rand(0.25, 0.45), rot: rand(0, Math.PI * 2) });
+  decals.push({ x, y, r, a:rand(0.25,0.45), rot:rand(0,Math.PI*2) });
 }
 
 /* ================= 升级 ================= */
 function gainXP(n) {
   xp += n;
-  while (xp >= xpNext) {
-    xp -= xpNext;
-    level++;
-    xpNext = Math.floor(xpNext * 1.35 + 4);
-    triggerUpgrade();
-  }
+  while (xp >= xpNext) { xp -= xpNext; level++; xpNext = Math.floor(xpNext*1.35+4); triggerUpgrade(); }
 }
 
 function triggerUpgrade() {
   pausedForUpgrade = true;
-  const shuffled = [...upgradePool].sort(() => Math.random() - 0.5);
-  upgradeUI = { choices: shuffled.slice(0, 3) };
+  const shuffled = [...upgradePool].sort(() => Math.random()-0.5);
+  upgradeUI = { choices: shuffled.slice(0,3) };
 }
 
 function selectUpgrade(index) {
@@ -1015,21 +1019,14 @@ function selectUpgrade(index) {
 }
 
 function getUpgradeLayout() {
-  const cw = Math.min(560, W - 36);
-  const ch = Math.min(380, H - 60);
-  const cx = (W - cw) / 2;
-  const cy = (H - ch) / 2;
-  const pad = 22;
-  const bw = cw - pad * 2;
-  const headerH = 78;
-  const gap = 12;
-  const bh = Math.min(70, (ch - headerH - pad - gap * 2) / 3);
-  const bx = cx + pad;
-  const startY = cy + headerH;
+  const cw = Math.min(560, W-36), ch = Math.min(380, H-60);
+  const cx = (W-cw)/2, cy = (H-ch)/2;
+  const pad = 22, bw = cw-pad*2;
+  const headerH = 78, gap = 12;
+  const bh = Math.min(70, (ch-headerH-pad-gap*2)/3);
+  const bx = cx+pad, startY = cy+headerH;
   const rects = [];
-  for (let i = 0; i < 3; i++) {
-    rects.push({ x: bx, y: startY + i * (bh + gap), w: bw, h: bh });
-  }
+  for (let i=0;i<3;i++) rects.push({ x:bx, y:startY+i*(bh+gap), w:bw, h:bh });
   return { cx, cy, cw, ch, rects, bh };
 }
 
@@ -1040,229 +1037,149 @@ function updateAutoTarget(dt) {
     autoTargetTimer = 0.12;
     autoTarget = null;
     const candidates = [];
-    for (let i = 0; i < enemies.length; i++) {
+    for (let i=0;i<enemies.length;i++) {
       const e = enemies[i];
       if (e.dead) continue;
       const d = dist(player.x, player.y, e.x, e.y);
       if (d < 560) candidates.push({ e, d });
     }
-    candidates.sort((a, b) => a.d - b.d);
-    for (let i = 0; i < candidates.length; i++) {
-      const e = candidates[i].e;
-      if (hasLineOfSight(player.x, player.y, e.x, e.y)) {
-        autoTarget = e;
-        break;
-      }
+    candidates.sort((a,b) => a.d-b.d);
+    for (const c of candidates) {
+      if (hasLineOfSight(player.x, player.y, c.e.x, c.e.y)) { autoTarget = c.e; break; }
     }
   }
   if (autoTarget && autoTarget.dead) autoTarget = null;
   return autoTarget;
 }
 
-/* ================= 主城盟友 ================= */
+/* ================= 盟友更新 ================= */
 function updateAlly(a, dt) {
   if (a.dead) return;
-  a.hurt -= dt;
-  a.attackCd -= dt;
-  a.punchT -= dt;
-
+  a.hurt -= dt; a.attackCd -= dt; a.punchT -= dt;
   let target = null, nd = 430;
   for (const e of enemies) {
     if (e.dead) continue;
     const d = dist(a.x, a.y, e.x, e.y);
     if (d < nd) { nd = d; target = e; }
   }
-
   let tx = a.x, ty = a.y;
-
   if (target) {
-    a.angle = Math.atan2(target.y - a.y, target.x - a.x);
+    a.angle = Math.atan2(target.y-a.y, target.x-a.x);
     const reach = a.r + target.r + 6;
-    if (nd > reach) {
-      tx = target.x;
-      ty = target.y;
-    } else {
-      if (a.attackCd <= 0) {
-        a.attackCd = 0.55;
-        a.punchT = 0.12;
-        const len = nd || 1;
-        damageEnemy(target, 16, (target.x - a.x) / len, (target.y - a.y) / len);
-        for (let i = 0; i < 8; i++) {
-          spawnParticle(a.x + Math.cos(a.angle) * 10, a.y + Math.sin(a.angle) * 10,
-            a.angle + rand(-0.7, 0.7), rand(120, 320), '255,200,120', rand(0.1, 0.25), rand(2, 4));
-        }
-        sfxHit(0.06);
-        shake = Math.max(shake, 2.5);
-      }
+    if (nd > reach) { tx = target.x; ty = target.y; }
+    else if (a.attackCd <= 0) {
+      a.attackCd = 0.55; a.punchT = 0.12;
+      const len = nd || 1;
+      damageEnemy(target, 16, (target.x-a.x)/len, (target.y-a.y)/len);
+      for (let i=0;i<8;i++) spawnParticle(a.x+Math.cos(a.angle)*10, a.y+Math.sin(a.angle)*10, a.angle+rand(-0.7,0.7), rand(120,320), '255,200,120', rand(0.1,0.25), rand(2,4));
+      sfxHit(0.06); shake = Math.max(shake, 2.5);
     }
   } else {
     const d = dist(a.x, a.y, player.x, player.y);
-    if (d > 75) {
-      tx = player.x;
-      ty = player.y;
-      a.angle = Math.atan2(player.y - a.y, player.x - a.x);
-    } else {
-      a.angle += dt * 0.4;
-      tx = player.x + Math.cos(a.angle) * 60;
-      ty = player.y + Math.sin(a.angle) * 60;
-    }
+    if (d > 75) { tx = player.x; ty = player.y; a.angle = Math.atan2(player.y-a.y, player.x-a.x); }
+    else { a.angle += dt*0.4; tx = player.x + Math.cos(a.angle)*60; ty = player.y + Math.sin(a.angle)*60; }
   }
-
-  const dx = tx - a.x, dy = ty - a.y;
-  const dl = Math.hypot(dx, dy);
+  const dx = tx-a.x, dy = ty-a.y;
+  const dl = Math.hypot(dx,dy);
   if (dl > 2) {
-    const spd = a.speed * dt;
-    a.x += (dx / dl) * Math.min(spd, dl);
-    a.y += (dy / dl) * Math.min(spd, dl);
+    const spd = a.speed*dt;
+    a.x += (dx/dl)*Math.min(spd,dl); a.y += (dy/dl)*Math.min(spd,dl);
   }
   pushOut(a, a.r);
-
-  for (let i = 0; i < allies.length; i++) {
+  for (let i=0;i<allies.length;i++) {
     const b = allies[i];
     if (b === a || b.dead) continue;
-    const ddx = b.x - a.x, ddy = b.y - a.y;
-    const dd = Math.hypot(ddx, ddy);
-    const min = a.r + b.r;
+    const ddx = b.x-a.x, ddy = b.y-a.y;
+    const dd = Math.hypot(ddx,ddy);
+    const min = a.r+b.r;
     if (dd < min && dd > 0.01) {
-      const p = (min - dd) / 2;
-      a.x -= (ddx / dd) * p;
-      a.y -= (ddy / dd) * p;
+      const p = (min-dd)/2;
+      a.x -= (ddx/dd)*p; a.y -= (ddy/dd)*p;
     }
   }
 }
 
-/* ================= 玩家（主城） ================= */
+/* ================= 玩家更新 ================= */
 function updatePlayer(dt) {
   let ax = 0, ay = 0;
-
   if (isTouchMode) {
     if (moveStick.active) {
       const m = Math.hypot(moveStick.dx, moveStick.dy);
       if (m > 0.12) { ax = moveStick.dx; ay = moveStick.dy; }
     }
   } else {
-    if (keys['KeyW'] || keys['ArrowUp']) ay -= 1;
-    if (keys['KeyS'] || keys['ArrowDown']) ay += 1;
-    if (keys['KeyA'] || keys['ArrowLeft']) ax -= 1;
-    if (keys['KeyD'] || keys['ArrowRight']) ax += 1;
-    const l = Math.hypot(ax, ay);
+    if (keys['KeyW']||keys['ArrowUp']) ay -= 1;
+    if (keys['KeyS']||keys['ArrowDown']) ay += 1;
+    if (keys['KeyA']||keys['ArrowLeft']) ax -= 1;
+    if (keys['KeyD']||keys['ArrowRight']) ax += 1;
+    const l = Math.hypot(ax,ay);
     if (l > 0) { ax /= l; ay /= l; }
-    if (keys['ShiftLeft'] || keys['ShiftRight']) tryDash();
+    if (keys['ShiftLeft']||keys['ShiftRight']) tryDash();
   }
-
-  player.dashCd -= dt;
-  player.dashTime -= dt;
-
-  player.vx += ax * 3000 * dt;
-  player.vy += ay * 3000 * dt;
-
+  player.dashCd -= dt; player.dashTime -= dt;
+  player.vx += ax*3000*dt; player.vy += ay*3000*dt;
   const fr = Math.pow(0.0009, dt);
-  player.vx *= fr;
-  player.vy *= fr;
-
+  player.vx *= fr; player.vy *= fr;
   const sp = Math.hypot(player.vx, player.vy);
   const maxS = player.dashTime > 0 ? 1000 : player.moveSpeed;
-  if (sp > maxS) {
-    player.vx = (player.vx / sp) * maxS;
-    player.vy = (player.vy / sp) * maxS;
-  }
-
-  player.x += player.vx * dt;
-  player.y += player.vy * dt;
+  if (sp > maxS) { player.vx = (player.vx/sp)*maxS; player.vy = (player.vy/sp)*maxS; }
+  player.x += player.vx*dt; player.y += player.vy*dt;
   pushOut(player, player.r);
 
   const target = updateAutoTarget(dt);
-  let aimInput = false;
-  let wantFire = false;
-
+  let aimInput = false, wantFire = false;
   if (isTouchMode) {
     if (aimStick.active) {
       const m = Math.hypot(aimStick.dx, aimStick.dy);
-      if (m > 0.22) {
-        player.angle = Math.atan2(aimStick.dy, aimStick.dx);
-        aimInput = true;
-      }
+      if (m > 0.22) { player.angle = Math.atan2(aimStick.dy, aimStick.dx); aimInput = true; }
     }
-    if (!aimInput && target) {
-      player.angle = Math.atan2(target.y - player.y, target.x - player.x);
-    }
+    if (!aimInput && target) player.angle = Math.atan2(target.y-player.y, target.x-player.x);
     wantFire = aimInput || !!target;
   } else {
-    const mwx = cam.x + (mouse.x - W / 2);
-    const mwy = cam.y + (mouse.y - H / 2);
-    player.angle = Math.atan2(mwy - player.y, mwx - player.x);
+    const mwx = cam.x + (mouse.x-W/2), mwy = cam.y + (mouse.y-H/2);
+    player.angle = Math.atan2(mwy-player.y, mwx-player.x);
     wantFire = mouse.down;
   }
 
-  player.fireCd -= dt;
-  player.reloadT -= dt;
-  player.hurtCd -= dt;
+  player.fireCd -= dt; player.reloadT -= dt; player.hurtCd -= dt;
+  if (player.reloadT <= 0 && player.ammo <= 0) player.reloadT = player.reloadTime;
+  if (player.reloadT <= 0 && player.reloadT+dt > 0 && player.ammo <= 0) player.ammo = player.mag;
+  if (wantFire && player.fireCd <= 0 && player.ammo > 0 && player.reloadT <= 0 && !gameOver && !pausedForUpgrade) playerShoot();
+  if (!isTouchMode && keys['KeyR'] && player.ammo < player.mag && player.reloadT <= 0) { player.reloadT = player.reloadTime; player.ammo = 0; }
 
-  if (player.reloadT <= 0 && player.ammo <= 0) {
-    player.reloadT = player.reloadTime;
-  }
-  if (player.reloadT <= 0 && player.reloadT + dt > 0 && player.ammo <= 0) {
-    player.ammo = player.mag;
-  }
-
-  if (wantFire && player.fireCd <= 0 && player.ammo > 0 && player.reloadT <= 0 && !gameOver && !pausedForUpgrade) {
-    playerShoot();
-  }
-
-  if (!isTouchMode && keys['KeyR'] && player.ammo < player.mag && player.reloadT <= 0) {
-    player.reloadT = player.reloadTime;
-    player.ammo = 0;
-  }
-
-  player.droneAngle += dt * 2.2;
-  for (let i = 0; i < player.drones.length; i++) {
+  player.droneAngle += dt*2.2;
+  for (let i=0;i<player.drones.length;i++) {
     const d = player.drones[i];
-    const a = player.droneAngle + (i * Math.PI * 2) / player.drones.length;
-    const dx = player.x + Math.cos(a) * d.dist;
-    const dy = player.y + Math.sin(a) * d.dist;
+    const a = player.droneAngle + (i*Math.PI*2)/player.drones.length;
+    const dx = player.x+Math.cos(a)*d.dist, dy = player.y+Math.sin(a)*d.dist;
     d.fireCd -= dt;
     if (d.fireCd <= 0) {
       d.fireCd = 0.55;
       let nearest = null, nd = 500;
       for (const e of enemies) {
         if (e.dead) continue;
-        const dd = dist(dx, dy, e.x, e.y);
-        if (dd < nd && hasLineOfSight(dx, dy, e.x, e.y)) { nd = dd; nearest = e; }
+        const dd = dist(dx,dy,e.x,e.y);
+        if (dd < nd && hasLineOfSight(dx,dy,e.x,e.y)) { nd = dd; nearest = e; }
       }
       if (nearest) {
-        const a2 = Math.atan2(nearest.y - dy, nearest.x - dx);
-        bullets.push({
-          x: dx, y: dy,
-          vx: Math.cos(a2) * 1200,
-          vy: Math.sin(a2) * 1200,
-          life: 0.7,
-          dmg: player.bulletDmg * 0.6,
-          friendly: true,
-        });
+        const a2 = Math.atan2(nearest.y-dy, nearest.x-dx);
+        bullets.push({ x:dx, y:dy, vx:Math.cos(a2)*1200, vy:Math.sin(a2)*1200, life:0.7, dmg:player.bulletDmg*0.6, friendly:true });
       }
     }
   }
 
-  for (let i = pickups.length - 1; i >= 0; i--) {
+  for (let i=pickups.length-1;i>=0;i--) {
     const p = pickups[i];
     p.t += dt;
-    if (dist(p.x, p.y, player.x, player.y) < player.pickupRange + 6) {
+    if (dist(p.x, p.y, player.x, player.y) < player.pickupRange+6) {
       if (p.type === 'hp') {
-        player.hp = Math.min(player.maxHp, player.hp + 30);
-        for (let k = 0; k < 10; k++) {
-          spawnParticle(p.x, p.y, rand(0, Math.PI * 2), rand(40, 180), '90,220,140', rand(0.2, 0.45), 3);
-        }
+        player.hp = Math.min(player.maxHp, player.hp+30);
+        for (let k=0;k<10;k++) spawnParticle(p.x,p.y,rand(0,Math.PI*2),rand(40,180),'90,220,140',rand(0.2,0.45),3);
       } else if (p.type === 'ammo') {
-        player.ammo = player.mag;
-        player.reloadT = 0;
-        for (let k = 0; k < 10; k++) {
-          spawnParticle(p.x, p.y, rand(0, Math.PI * 2), rand(40, 180), '230,200,90', rand(0.2, 0.45), 3);
-        }
+        player.ammo = player.mag; player.reloadT = 0;
+        for (let k=0;k<10;k++) spawnParticle(p.x,p.y,rand(0,Math.PI*2),rand(40,180),'230,200,90',rand(0.2,0.45),3);
       } else if (p.type === 'ally') {
-        if (!addAlly(p.x, p.y)) {
-          player.ammo = player.mag;
-          player.reloadT = 0;
-        }
+        if (!addAlly(p.x, p.y)) { player.ammo = player.mag; player.reloadT = 0; }
       }
       pickups.splice(i, 1);
     }
@@ -1272,16 +1189,12 @@ function updatePlayer(dt) {
 /* ================= 敌人更新 ================= */
 function updateEnemy(e, dt) {
   const d = dist(e.x, e.y, player.x, player.y);
-
   e.seeTimer -= dt;
   if (e.seeTimer <= 0) {
     e.seeTimer = 0.2;
     e.canSee = d < 820 && hasLineOfSight(e.x, e.y, player.x, player.y);
   }
-  if (e.canSee) {
-    e.alert = 3;
-    e.angle = Math.atan2(player.y - e.y, player.x - e.x);
-  }
+  if (e.canSee) { e.alert = 3; e.angle = Math.atan2(player.y-e.y, player.x-e.x); }
   e.alert -= dt;
 
   let allyNear = null, ad = 220;
@@ -1292,159 +1205,104 @@ function updateEnemy(e, dt) {
   }
 
   let mvx = 0, mvy = 0;
-
   if (allyNear && ad < 160) {
-    const nx = (allyNear.x - e.x) / (ad || 1);
-    const ny = (allyNear.y - e.y) / (ad || 1);
+    const nx = (allyNear.x-e.x)/(ad||1), ny = (allyNear.y-e.y)/(ad||1);
     mvx = -nx; mvy = -ny;
-    e.angle = Math.atan2(allyNear.y - e.y, allyNear.x - e.x);
+    e.angle = Math.atan2(allyNear.y-e.y, allyNear.x-e.x);
     e.fireCd -= dt;
-    if (e.fireCd <= 0 && !gameOver) {
-      e.fireCd = rand(0.9, 1.8);
-      enemyShootAt(e, allyNear.x, allyNear.y);
-    }
+    if (e.fireCd <= 0 && !gameOver) { e.fireCd = rand(0.9,1.8); enemyShootAt(e, allyNear.x, allyNear.y); }
   } else if (e.alert > 0 && !gameOver) {
-    const nx = (player.x - e.x) / (d || 1);
-    const ny = (player.y - e.y) / (d || 1);
-    if (d > (e.isElite ? 300 : 250)) { mvx = nx; mvy = ny; }
-    else if (d < (e.isElite ? 200 : 160)) { mvx = -nx; mvy = -ny; }
-    const s = Math.sin(time * 2.2 + e.x * 0.011);
-    mvx += -ny * 0.55 * s;
-    mvy += nx * 0.55 * s;
-
+    const nx = (player.x-e.x)/(d||1), ny = (player.y-e.y)/(d||1);
+    if (d > (e.isElite?300:250)) { mvx = nx; mvy = ny; }
+    else if (d < (e.isElite?200:160)) { mvx = -nx; mvy = -ny; }
+    const s = Math.sin(time*2.2 + e.x*0.011);
+    mvx += -ny*0.55*s; mvy += nx*0.55*s;
     e.fireCd -= dt;
     if (e.fireCd <= 0 && e.canSee && d < e.template.range) {
-      e.fireCd = e.isElite ? rand(0.5, 1.0) : rand(e.template.fire[0], e.template.fire[1]);
+      e.fireCd = e.isElite ? rand(0.5,1.0) : rand(e.template.fire[0], e.template.fire[1]);
       enemyShoot(e);
     }
   } else {
     e.wanderT -= dt;
-    if (e.wanderT <= 0) {
-      e.wanderT = rand(1.4, 4);
-      const a = rand(0, Math.PI * 2);
-      e.wx = Math.cos(a);
-      e.wy = Math.sin(a);
-    }
-    mvx = e.wx * 0.45;
-    mvy = e.wy * 0.45;
+    if (e.wanderT <= 0) { e.wanderT = rand(1.4,4); const a = rand(0,Math.PI*2); e.wx = Math.cos(a); e.wy = Math.sin(a); }
+    mvx = e.wx*0.45; mvy = e.wy*0.45;
     e.angle = Math.atan2(e.wy, e.wx);
   }
-
   const ml = Math.hypot(mvx, mvy);
   if (ml > 0.01) { mvx /= ml; mvy /= ml; }
-
-  e.x += mvx * e.speed * dt;
-  e.y += mvy * e.speed * dt;
+  e.x += mvx*e.speed*dt; e.y += mvy*e.speed*dt;
   pushOut(e, e.r);
-
   if (e.hurt > 0) e.hurt -= dt;
 }
 
 function enemyShootAt(e, tx, ty) {
-  const base = Math.atan2(ty - e.y, tx - e.x);
-  const a = base + rand(-0.12, 0.12);
+  const base = Math.atan2(ty-e.y, tx-e.x);
+  const a = base + rand(-0.12,0.12);
   const sp = e.isElite ? 900 : 800;
-  bullets.push({
-    x: e.x + Math.cos(a) * 18,
-    y: e.y + Math.sin(a) * 18,
-    vx: Math.cos(a) * sp,
-    vy: Math.sin(a) * sp,
-    life: 1.6,
-    dmg: e.isElite ? e.template.dmg * 1.6 : e.template.dmg,
-    friendly: false
-  });
+  bullets.push({ x:e.x+Math.cos(a)*18, y:e.y+Math.sin(a)*18, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, life:1.6, dmg: e.isElite?e.template.dmg*1.6:e.template.dmg, friendly:false });
   sfxShot(0.04, 0.8);
 }
 
 /* ================= 子弹更新 ================= */
 function updateBullets(dt) {
-  for (let i = bullets.length - 1; i >= 0; i--) {
+  for (let i=bullets.length-1;i>=0;i--) {
     const b = bullets[i];
     b.life -= dt;
     if (b.life <= 0) { bullets.splice(i, 1); continue; }
-
     const steps = 2;
     let removed = false;
-    for (let s = 0; s < steps; s++) {
-      b.x += (b.vx * dt) / steps;
-      b.y += (b.vy * dt) / steps;
-
-      if (b.x < 0 || b.y < 0 || b.x > WORLD || b.y > WORLD) {
-        bullets.splice(i, 1); removed = true; break;
-      }
+    for (let s=0;s<steps;s++) {
+      b.x += (b.vx*dt)/steps; b.y += (b.vy*dt)/steps;
+      if (b.x < 0 || b.y < 0 || b.x > WORLD || b.y > WORLD) { bullets.splice(i, 1); removed = true; break; }
       if (pointInBuilding(b.x, b.y)) {
-        for (let k = 0; k < 4; k++) {
-          spawnParticle(b.x, b.y, Math.atan2(-b.vy, -b.vx) + rand(-1.1, 1.1),
-            rand(60, 260), '255,220,150', rand(0.08, 0.22), rand(1.5, 3));
-        }
+        for (let k=0;k<4;k++) spawnParticle(b.x,b.y,Math.atan2(-b.vy,-b.vx)+rand(-1.1,1.1),rand(60,260),'255,220,150',rand(0.08,0.22),rand(1.5,3));
         bullets.splice(i, 1); removed = true; break;
       }
-
       if (b.friendly) {
-        for (let j = 0; j < enemies.length; j++) {
+        for (let j=0;j<enemies.length;j++) {
           const e = enemies[j];
           if (e.dead) continue;
-          if (dist(b.x, b.y, e.x, e.y) < e.r + 4) {
-            const len = Math.hypot(b.vx, b.vy) || 1;
-            damageEnemy(e, b.dmg, b.vx / len, b.vy / len);
-            if (b.pierceLeft > 0) {
-              b.pierceLeft--;
-            } else {
-              bullets.splice(i, 1); removed = true;
-            }
+          if (dist(b.x,b.y,e.x,e.y) < e.r+4) {
+            const len = Math.hypot(b.vx,b.vy) || 1;
+            damageEnemy(e, b.dmg, b.vx/len, b.vy/len);
+            if (b.pierceLeft > 0) b.pierceLeft--;
+            else { bullets.splice(i, 1); removed = true; }
             break;
           }
         }
       } else {
         let blocked = false;
-        for (let k = 0; k < allies.length; k++) {
+        for (let k=0;k<allies.length;k++) {
           const a = allies[k];
           if (a.dead) continue;
-          if (dist(b.x, b.y, a.x, a.y) < a.r + 5) {
-            a.hp -= b.dmg;
-            a.hurt = 0.18;
+          if (dist(b.x,b.y,a.x,a.y) < a.r+5) {
+            a.hp -= b.dmg; a.hurt = 0.18;
             shake = Math.max(shake, 3.5);
-            for (let p = 0; p < 7; p++) {
-              spawnParticle(b.x, b.y, rand(0, Math.PI * 2), rand(60, 240),
-                '210,170,110', rand(0.12, 0.32), rand(2, 4));
-            }
+            for (let p=0;p<7;p++) spawnParticle(b.x,b.y,rand(0,Math.PI*2),rand(60,240),'210,170,110',rand(0.12,0.32),rand(2,4));
             sfxHit(0.07);
             if (a.hp <= 0) {
-              a.dead = true;
-              a.hp = 0;
-              for (let p = 0; p < 20; p++) {
-                spawnParticle(a.x, a.y, rand(0, Math.PI * 2), rand(40, 300),
-                  p % 2 ? '120,80,50' : '80,50,30', rand(0.3, 0.8), rand(2, 5));
-              }
-              addDecal(a.x, a.y, rand(12, 22));
+              a.dead = true; a.hp = 0;
+              for (let p=0;p<20;p++) spawnParticle(a.x,a.y,rand(0,Math.PI*2),rand(40,300), p%2?'120,80,50':'80,50,30', rand(0.3,0.8), rand(2,5));
+              addDecal(a.x, a.y, rand(12,22));
               shake = Math.max(shake, 8);
             }
-            bullets.splice(i, 1); removed = true; blocked = true;
-            break;
+            bullets.splice(i, 1); removed = true; blocked = true; break;
           }
         }
         if (blocked) break;
 
-        if (player.hp > 0 && dist(b.x, b.y, player.x, player.y) < player.r + 4) {
+        if (player.hp > 0 && dist(b.x,b.y,player.x,player.y) < player.r+4) {
           player.hp -= b.dmg;
-          hitFlash = Math.min(1, hitFlash + 0.7);
+          hitFlash = Math.min(1, hitFlash+0.7);
           shake = Math.max(shake, 6);
-          for (let k = 0; k < 8; k++) {
-            spawnParticle(b.x, b.y, rand(0, Math.PI * 2), rand(60, 260),
-              '190,30,30', rand(0.15, 0.4), rand(2, 4));
-          }
-          addDecal(player.x + rand(-8, 8), player.y + rand(-8, 8), rand(10, 18));
+          for (let k=0;k<8;k++) spawnParticle(b.x,b.y,rand(0,Math.PI*2),rand(60,260),'190,30,30',rand(0.15,0.4),rand(2,4));
+          addDecal(player.x+rand(-8,8), player.y+rand(-8,8), rand(10,18));
           sfxHit(0.1);
           bullets.splice(i, 1); removed = true;
           if (player.hp <= 0 && !gameOver) {
-            player.hp = 0;
-            gameOver = true;
-            shake = 22;
+            player.hp = 0; gameOver = true; shake = 22;
             resetSticks();
-            for (let k = 0; k < 40; k++) {
-              spawnParticle(player.x, player.y, rand(0, Math.PI * 2), rand(50, 480),
-                k % 2 ? '170,25,25' : '60,10,10', rand(0.3, 1.0), rand(2, 6));
-            }
+            for (let k=0;k<40;k++) spawnParticle(player.x,player.y,rand(0,Math.PI*2),rand(50,480), k%2?'170,25,25':'60,10,10', rand(0.3,1.0), rand(2,6));
           }
           break;
         }
@@ -1456,56 +1314,41 @@ function updateBullets(dt) {
 
 /* ================= 粒子更新 ================= */
 function updateParticles(dt) {
-  for (let i = particles.length - 1; i >= 0; i--) {
+  for (let i=particles.length-1;i>=0;i--) {
     const p = particles[i];
     p.life -= dt;
     if (p.life <= 0) { particles.splice(i, 1); continue; }
-    p.x += p.vx * dt;
-    p.y += p.vy * dt;
-    p.vx *= Math.pow(0.02, dt);
-    p.vy *= Math.pow(0.02, dt);
+    p.x += p.vx*dt; p.y += p.vy*dt;
+    p.vx *= Math.pow(0.02, dt); p.vy *= Math.pow(0.02, dt);
   }
 }
 
 /* ================= 主城更新 ================= */
 function updateCity(dt) {
   if (pausedForUpgrade) return;
-
   time += dt;
+  if (!gameOver) updatePlayer(dt);
+  else { player.vx *= Math.pow(0.01, dt); player.vy *= Math.pow(0.01, dt); }
 
-  if (!gameOver) {
-    updatePlayer(dt);
-  } else {
-    player.vx *= Math.pow(0.01, dt);
-    player.vy *= Math.pow(0.01, dt);
-  }
+  for (let i=0;i<allies.length;i++) updateAlly(allies[i], dt);
+  for (let i=allies.length-1;i>=0;i--) if (allies[i].dead) allies.splice(i, 1);
 
-  for (let i = 0; i < allies.length; i++) updateAlly(allies[i], dt);
-  for (let i = allies.length - 1; i >= 0; i--) {
-    if (allies[i].dead) allies.splice(i, 1);
-  }
+  for (let i=0;i<enemies.length;i++) updateEnemy(enemies[i], dt);
 
-  for (let i = 0; i < enemies.length; i++) updateEnemy(enemies[i], dt);
-
-  for (let i = 0; i < enemies.length; i++) {
-    for (let j = i + 1; j < enemies.length; j++) {
-      const a = enemies[i], b = enemies[j];
-      if (a.dead || b.dead) continue;
-      const dx = b.x - a.x, dy = b.y - a.y;
-      const d = Math.hypot(dx, dy);
-      const min = a.r + b.r;
-      if (d < min && d > 0.01) {
-        const p = (min - d) / 2;
-        const nx = dx / d, ny = dy / d;
-        a.x -= nx * p; a.y -= ny * p;
-        b.x += nx * p; b.y += ny * p;
-      }
+  for (let i=0;i<enemies.length;i++) for (let j=i+1;j<enemies.length;j++) {
+    const a = enemies[i], b = enemies[j];
+    if (a.dead || b.dead) continue;
+    const dx = b.x-a.x, dy = b.y-a.y;
+    const d = Math.hypot(dx, dy);
+    const min = a.r+b.r;
+    if (d < min && d > 0.01) {
+      const p = (min-d)/2;
+      const nx = dx/d, ny = dy/d;
+      a.x -= nx*p; a.y -= ny*p; b.x += nx*p; b.y += ny*p;
     }
   }
 
-  for (let i = enemies.length - 1; i >= 0; i--) {
-    if (enemies[i].dead) enemies.splice(i, 1);
-  }
+  for (let i=enemies.length-1;i>=0;i--) if (enemies[i].dead) enemies.splice(i, 1);
 
   updateBullets(dt);
   updateParticles(dt);
@@ -1513,57 +1356,42 @@ function updateCity(dt) {
   if (!gameOver) {
     respawnTimer -= dt;
     const cap = isTouchMode ? 34 : 55;
-    const maxEnemies = Math.min(20 + Math.floor(level / 2), cap);
+    const maxEnemies = Math.min(20 + Math.floor(level/2), cap);
     if (respawnTimer <= 0 && enemies.length < maxEnemies) {
-      respawnTimer = Math.max(0.6, 1.6 - level * 0.02);
+      respawnTimer = Math.max(0.6, 1.6 - level*0.02);
       spawnEnemy();
     }
-
     supplyTimer -= dt;
-    if (supplyTimer <= 0) {
-      supplyTimer = rand(9, 16);
-      spawnSupply();
-    }
+    if (supplyTimer <= 0) { supplyTimer = rand(9,16); spawnSupply(); }
   }
 
-  if (comboTimer > 0) {
-    comboTimer -= dt;
-    if (comboTimer <= 0) combo = 0;
-  }
+  if (comboTimer > 0) { comboTimer -= dt; if (comboTimer <= 0) combo = 0; }
 
-  const leadX = isTouchMode ? 0 : (mouse.x - W / 2) * 0.12;
-  const leadY = isTouchMode ? 0 : (mouse.y - H / 2) * 0.12;
-  const targetX = player.x + leadX;
-  const targetY = player.y + leadY;
-  cam.x += (targetX - cam.x) * Math.min(1, 9 * dt);
-  cam.y += (targetY - cam.y) * Math.min(1, 9 * dt);
+  const leadX = isTouchMode ? 0 : (mouse.x-W/2)*0.12;
+  const leadY = isTouchMode ? 0 : (mouse.y-H/2)*0.12;
+  const targetX = player.x + leadX, targetY = player.y + leadY;
+  cam.x += (targetX-cam.x)*Math.min(1, 9*dt);
+  cam.y += (targetY-cam.y)*Math.min(1, 9*dt);
 
   shake *= Math.pow(0.0015, dt);
   if (shake < 0.05) shake = 0;
-
   hitFlash *= Math.pow(0.02, dt);
   if (hitFlash < 0.01) hitFlash = 0;
 }
 
 function spawnSupply() {
-  for (let t = 0; t < 50; t++) {
-    const ang = rand(0, Math.PI * 2);
-    const d = rand(200, 620);
-    const x = player.x + Math.cos(ang) * d;
-    const y = player.y + Math.sin(ang) * d;
-    if (x < 120 || y < 120 || x > WORLD - 120 || y > WORLD - 120) continue;
+  for (let t=0;t<50;t++) {
+    const ang = rand(0,Math.PI*2), d = rand(200,620);
+    const x = player.x+Math.cos(ang)*d, y = player.y+Math.sin(ang)*d;
+    if (x < 120 || y < 120 || x > WORLD-120 || y > WORLD-120) continue;
     if (pointInBuilding(x, y)) continue;
-
     let type;
     const r = Math.random();
     if (allies.length < MAX_ALLIES && r < 0.30) type = 'ally';
     else if (r < 0.65) type = 'hp';
     else type = 'ammo';
-
-    pickups.push({ x, y, type, t: 0, supply: true });
-    for (let i = 0; i < 10; i++) {
-      spawnParticle(x, y, rand(0, Math.PI * 2), rand(30, 160), '212,175,55', rand(0.3, 0.6), rand(1.5, 3));
-    }
+    pickups.push({ x, y, type, t:0, supply:true });
+    for (let i=0;i<10;i++) spawnParticle(x,y,rand(0,Math.PI*2),rand(30,160),'212,175,55',rand(0.3,0.6),rand(1.5,3));
     return;
   }
 }
@@ -1578,359 +1406,274 @@ function updateSubMap(mapState, dt) {
 /* ================= 主更新 ================= */
 function update(dt) {
   updateTransports(dt);
-
-  if (currentMap === 'city') {
-    updateCity(dt);
-  } else if (currentMap === 'farm') {
-    updateSubMap(farm, dt);
-  } else if (currentMap === 'mine') {
-    updateSubMap(mine, dt);
-  }
+  if (currentMap === 'city') updateCity(dt);
+  else if (currentMap === 'farm') updateSubMap(farm, dt);
+  else if (currentMap === 'mine') updateSubMap(mine, dt);
 }
 
 /* ================= 名牌 ================= */
 function drawNameLabel(text, x, y, color, size) {
-  ctx.font = 'bold ' + size + 'px "Courier New", "Microsoft YaHei", sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'bottom';
-  ctx.lineJoin = 'round';
-  ctx.lineWidth = 3;
+  ctx.font = 'bold '+size+'px "Courier New", "Microsoft YaHei", sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+  ctx.lineJoin = 'round'; ctx.lineWidth = 3;
   ctx.strokeStyle = 'rgba(0,0,0,0.78)';
   ctx.strokeText(text, x, y);
   ctx.fillStyle = color;
   ctx.fillText(text, x, y);
 }
 
-/* ================= 主城渲染 ================= */
-function renderCity() {
+/* ================= 开始页面绘制 ================= */
+function renderStartScreen() {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-
   ctx.fillStyle = '#0d0b08';
   ctx.fillRect(0, 0, W, H);
 
-  const sx = (Math.random() * 2 - 1) * shake;
-  const sy = (Math.random() * 2 - 1) * shake;
+  // 装饰金线
+  const titleY = Math.max(60, H*0.13);
+  ctx.strokeStyle = 'rgba(212,175,55,0.25)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(W*0.15, titleY+45); ctx.lineTo(W*0.85, titleY+45);
+  ctx.stroke();
 
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = 'rgba(212,175,55,0.98)';
+  const titleSize = Math.min(40, W*0.10);
+  ctx.font = 'bold '+titleSize+'px "Courier New", monospace';
+  ctx.fillText('暗 巷', W/2, titleY);
+
+  ctx.font = 'bold '+(titleSize*0.4)+'px "Courier New", monospace';
+  ctx.fillStyle = 'rgba(212,175,55,0.6)';
+  ctx.fillText('三 部 曲', W/2, titleY+titleSize*0.9);
+
+  const L = getStartLayout();
+  for (let i=0;i<L.cards.length;i++) {
+    const c = L.cards[i];
+    const m = c.mode;
+
+    ctx.fillStyle = 'rgba(20,15,10,0.82)';
+    ctx.fillRect(c.x, c.y, c.w, c.h);
+    ctx.strokeStyle = 'rgba(212,175,55,0.45)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(c.x+0.5, c.y+0.5, c.w-1, c.h-1);
+    ctx.strokeStyle = 'rgba(212,175,55,0.15)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(c.x+5, c.y+5, c.w-10, c.h-10);
+
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+
+    ctx.fillStyle = 'rgba(255,230,180,0.98)';
+    ctx.font = 'bold '+Math.min(19, c.w*0.06)+'px "Courier New", monospace';
+    ctx.fillText(m.title + ' · ' + m.year, c.x+20, c.y+c.h*0.28);
+
+    ctx.fillStyle = 'rgba(212,175,55,0.85)';
+    ctx.font = 'bold '+Math.min(13, c.w*0.04)+'px "Courier New", monospace';
+    ctx.fillText(m.subtitle, c.x+20, c.y+c.h*0.53);
+
+    ctx.fillStyle = 'rgba(200,190,170,0.6)';
+    ctx.font = Math.min(12, c.w*0.036)+'px "Courier New", monospace';
+    ctx.fillText(m.playerName + ' · ' + m.allyLabel, c.x+20, c.y+c.h*0.78);
+
+    // 右侧加速标记
+    ctx.textAlign = 'right';
+    ctx.fillStyle = 'rgba(212,175,55,0.45)';
+    ctx.font = 'bold '+Math.min(11, c.w*0.034)+'px "Courier New", monospace';
+    let boostLabel = '';
+    if (m.boost.type === 'whip') boostLabel = '鞭打加速';
+    else if (m.boost.type === 'money') boostLabel = '加钱加班';
+    else if (m.boost.type === 'faith') boostLabel = '信仰支持';
+    ctx.fillText(boostLabel, c.x+c.w-20, c.y+c.h*0.28);
+  }
+
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = 'rgba(200,190,170,0.4)';
+  ctx.font = 'bold 11px "Courier New", monospace';
+  ctx.fillText('点击卡片进入对应时代', W/2, H-30);
+}
+
+/* ================= 主城渲染 ================= */
+function renderCity() {
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.fillStyle = '#0d0b08';
+  ctx.fillRect(0, 0, W, H);
+
+  const sx = (Math.random()*2-1)*shake, sy = (Math.random()*2-1)*shake;
   ctx.save();
-  ctx.translate(W / 2 - cam.x + sx, H / 2 - cam.y + sy);
+  ctx.translate(W/2-cam.x+sx, H/2-cam.y+sy);
 
-  const vx0 = cam.x - W / 2 - 320;
-  const vx1 = cam.x + W / 2 + 320;
-  const vy0 = cam.y - H / 2 - 320;
-  const vy1 = cam.y + H / 2 + 320;
+  const vx0 = cam.x-W/2-320, vx1 = cam.x+W/2+320;
+  const vy0 = cam.y-H/2-320, vy1 = cam.y+H/2+320;
 
-  // 泥土地面
   ctx.fillStyle = '#2a231b';
-  ctx.fillRect(vx0, vy0, vx1 - vx0, vy1 - vy0);
+  ctx.fillRect(vx0, vy0, vx1-vx0, vy1-vy0);
 
-  // 道路
   ctx.fillStyle = '#3a3228';
-  const i0 = Math.max(0, Math.floor(vx0 / BLOCK));
-  const i1 = Math.min(GRID_N, Math.ceil(vx1 / BLOCK));
-  const j0 = Math.max(0, Math.floor(vy0 / BLOCK));
-  const j1 = Math.min(GRID_N, Math.ceil(vy1 / BLOCK));
-
-  for (let i = i0; i <= i1; i++) {
-    ctx.fillRect(i * BLOCK - ROAD / 2, vy0, ROAD, vy1 - vy0);
-  }
-  for (let j = j0; j <= j1; j++) {
-    ctx.fillRect(vx0, j * BLOCK - ROAD / 2, vx1 - vx0, ROAD);
-  }
+  const i0 = Math.max(0, Math.floor(vx0/BLOCK));
+  const i1 = Math.min(GRID_N, Math.ceil(vx1/BLOCK));
+  const j0 = Math.max(0, Math.floor(vy0/BLOCK));
+  const j1 = Math.min(GRID_N, Math.ceil(vy1/BLOCK));
+  for (let i=i0;i<=i1;i++) ctx.fillRect(i*BLOCK-ROAD/2, vy0, ROAD, vy1-vy0);
+  for (let j=j0;j<=j1;j++) ctx.fillRect(vx0, j*BLOCK-ROAD/2, vx1-vx0, ROAD);
 
   ctx.strokeStyle = 'rgba(160,130,80,0.12)';
   ctx.lineWidth = 2;
-  ctx.setLineDash([22, 26]);
-  for (let i = i0; i <= i1; i++) {
-    ctx.beginPath();
-    ctx.moveTo(i * BLOCK, vy0);
-    ctx.lineTo(i * BLOCK, vy1);
-    ctx.stroke();
-  }
-  for (let j = j0; j <= j1; j++) {
-    ctx.beginPath();
-    ctx.moveTo(vx0, j * BLOCK);
-    ctx.lineTo(vx1, j * BLOCK);
-    ctx.stroke();
-  }
+  ctx.setLineDash([22,26]);
+  for (let i=i0;i<=i1;i++) { ctx.beginPath(); ctx.moveTo(i*BLOCK,vy0); ctx.lineTo(i*BLOCK,vy1); ctx.stroke(); }
+  for (let j=j0;j<=j1;j++) { ctx.beginPath(); ctx.moveTo(vx0,j*BLOCK); ctx.lineTo(vx1,j*BLOCK); ctx.stroke(); }
   ctx.setLineDash([]);
 
-  for (let i = 0; i < decals.length; i++) {
+  for (let i=0;i<decals.length;i++) {
     const d = decals[i];
     if (d.x < vx0 || d.x > vx1 || d.y < vy0 || d.y > vy1) continue;
-    ctx.fillStyle = 'rgba(70,10,10,' + d.a + ')';
-    ctx.beginPath();
-    ctx.ellipse(d.x, d.y, d.r, d.r * 0.72, d.rot, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.fillStyle = 'rgba(70,10,10,'+d.a+')';
+    ctx.beginPath(); ctx.ellipse(d.x,d.y,d.r,d.r*0.72,d.rot,0,Math.PI*2); ctx.fill();
   }
 
-  for (let i = 0; i < buildings.length; i++) {
+  for (let i=0;i<buildings.length;i++) {
     const b = buildings[i];
-    if (b.x + b.w < vx0 || b.x > vx1 || b.y + b.h < vy0 || b.y > vy1) continue;
-
+    if (b.x+b.w < vx0 || b.x > vx1 || b.y+b.h < vy0 || b.y > vy1) continue;
     ctx.fillStyle = 'rgba(0,0,0,0.42)';
-    ctx.fillRect(b.x + 9, b.y + 12, b.w, b.h);
-
+    ctx.fillRect(b.x+9, b.y+12, b.w, b.h);
     ctx.fillStyle = b.col;
     ctx.fillRect(b.x, b.y, b.w, b.h);
-
-    // 木屋横梁
     ctx.fillStyle = 'rgba(140,100,60,0.22)';
     ctx.fillRect(b.x, b.y, b.w, 4);
     ctx.fillStyle = 'rgba(140,100,60,0.10)';
     ctx.fillRect(b.x, b.y, 4, b.h);
-
-    for (let k = 0; k < b.details.length; k++) {
+    for (let k=0;k<b.details.length;k++) {
       const d = b.details[k];
-      if (d.t === 'vent') {
-        ctx.fillStyle = 'rgba(0,0,0,0.32)';
-        ctx.fillRect(d.x, d.y, d.w, d.h);
-        ctx.fillStyle = 'rgba(200,160,100,0.08)';
-        ctx.fillRect(d.x, d.y, d.w, 2);
-      } else {
-        // 窗户
-        ctx.fillStyle = 'rgba(180,200,220,0.10)';
-        ctx.fillRect(d.x, d.y, d.w, d.h);
-        ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(d.x + 0.5, d.y + 0.5, d.w - 1, d.h - 1);
-      }
+      if (d.t === 'vent') { ctx.fillStyle = 'rgba(0,0,0,0.32)'; ctx.fillRect(d.x,d.y,d.w,d.h); ctx.fillStyle = 'rgba(200,160,100,0.08)'; ctx.fillRect(d.x,d.y,d.w,2); }
+      else { ctx.fillStyle = 'rgba(180,200,220,0.10)'; ctx.fillRect(d.x,d.y,d.w,d.h); ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 1; ctx.strokeRect(d.x+0.5,d.y+0.5,d.w-1,d.h-1); }
     }
-
-    ctx.strokeStyle = 'rgba(0,0,0,0.55)';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(b.x + 1, b.y + 1, b.w - 2, b.h - 2);
+    ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 2;
+    ctx.strokeRect(b.x+1, b.y+1, b.w-2, b.h-2);
   }
 
   ctx.globalCompositeOperation = 'lighter';
-  for (let i = 0; i < lamps.length; i++) {
+  for (let i=0;i<lamps.length;i++) {
     const l = lamps[i];
-    if (l.x < vx0 - 200 || l.x > vx1 + 200 || l.y < vy0 - 200 || l.y > vy1 + 200) continue;
-    ctx.drawImage(glowCanvas, l.x - 150, l.y - 150, 300, 300);
+    if (l.x < vx0-200 || l.x > vx1+200 || l.y < vy0-200 || l.y > vy1+200) continue;
+    ctx.drawImage(glowCanvas, l.x-150, l.y-150, 300, 300);
   }
   ctx.globalCompositeOperation = 'source-over';
-
-  for (let i = 0; i < lamps.length; i++) {
+  for (let i=0;i<lamps.length;i++) {
     const l = lamps[i];
-    if (l.x < vx0 - 60 || l.x > vx1 + 60 || l.y < vy0 - 60 || l.y > vy1 + 60) continue;
+    if (l.x < vx0-60 || l.x > vx1+60 || l.y < vy0-60 || l.y > vy1+60) continue;
     ctx.fillStyle = 'rgba(255,210,140,0.85)';
-    ctx.beginPath();
-    ctx.arc(l.x, l.y, 3, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.beginPath(); ctx.arc(l.x, l.y, 3, 0, Math.PI*2); ctx.fill();
   }
 
-  for (let i = 0; i < pickups.length; i++) {
+  for (let i=0;i<pickups.length;i++) {
     const p = pickups[i];
-    const bob = Math.sin(p.t * 4) * 3;
-    ctx.save();
-    ctx.translate(p.x, p.y + bob);
-
-    if (p.supply) {
-      ctx.beginPath();
-      ctx.arc(0, 0, 15, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(212,175,55,0.10)';
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(212,175,55,0.25)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-    }
-
+    const bob = Math.sin(p.t*4)*3;
+    ctx.save(); ctx.translate(p.x, p.y+bob);
+    if (p.supply) { ctx.beginPath(); ctx.arc(0,0,15,0,Math.PI*2); ctx.fillStyle = 'rgba(212,175,55,0.10)'; ctx.fill(); ctx.strokeStyle = 'rgba(212,175,55,0.25)'; ctx.lineWidth = 1; ctx.stroke(); }
     if (p.type === 'hp') {
-      ctx.fillStyle = 'rgba(60,200,130,0.95)';
-      ctx.beginPath(); ctx.arc(0, 0, 9, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = 'rgba(15,20,15,0.9)';
-      ctx.fillRect(-5.5, -1.8, 11, 3.6);
-      ctx.fillRect(-1.8, -5.5, 3.6, 11);
+      ctx.fillStyle = 'rgba(60,200,130,0.95)'; ctx.beginPath(); ctx.arc(0,0,9,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = 'rgba(15,20,15,0.9)'; ctx.fillRect(-5.5,-1.8,11,3.6); ctx.fillRect(-1.8,-5.5,3.6,11);
     } else if (p.type === 'ammo') {
-      ctx.fillStyle = 'rgba(230,200,80,0.95)';
-      ctx.beginPath(); ctx.arc(0, 0, 9, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = 'rgba(15,15,10,0.9)';
-      ctx.fillRect(-5.5, -4, 11, 3);
-      ctx.fillRect(-5.5, 1, 11, 3);
+      ctx.fillStyle = 'rgba(230,200,80,0.95)'; ctx.beginPath(); ctx.arc(0,0,9,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = 'rgba(15,15,10,0.9)'; ctx.fillRect(-5.5,-4,11,3); ctx.fillRect(-5.5,1,11,3);
     } else if (p.type === 'ally') {
-      ctx.fillStyle = 'rgba(212,175,55,0.95)';
-      ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = 'rgba(30,20,10,0.95)';
-      ctx.beginPath(); ctx.arc(0, -3, 3.2, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(0, 5, 4.5, 3.2, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(212,175,55,0.95)'; ctx.beginPath(); ctx.arc(0,0,10,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = 'rgba(30,20,10,0.95)'; ctx.beginPath(); ctx.arc(0,-3,3.2,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.ellipse(0,5,4.5,3.2,0,0,Math.PI*2); ctx.fill();
     }
     ctx.restore();
   }
 
-  for (let i = 0; i < enemies.length; i++) {
+  for (let i=0;i<enemies.length;i++) {
     const e = enemies[i];
     if (e.x < vx0 || e.x > vx1 || e.y < vy0 || e.y > vy1) continue;
-
     ctx.fillStyle = 'rgba(0,0,0,0.45)';
-    ctx.beginPath();
-    ctx.ellipse(e.x + 3, e.y + 5, e.r * 1.05, e.r * 0.8, 0, 0, Math.PI * 2);
-    ctx.fill();
-
+    ctx.beginPath(); ctx.ellipse(e.x+3, e.y+5, e.r*1.05, e.r*0.8, 0, 0, Math.PI*2); ctx.fill();
     if (e.isElite) {
-      const pulse = 1 + Math.sin(time * 6 + e.x) * 0.15;
-      ctx.strokeStyle = 'rgba(255,200,60,' + (0.5 + Math.sin(time * 6) * 0.3).toFixed(2) + ')';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(e.x, e.y, e.r * 1.8 * pulse, 0, Math.PI * 2);
-      ctx.stroke();
+      const pulse = 1 + Math.sin(time*6+e.x)*0.15;
+      ctx.strokeStyle = 'rgba(255,200,60,'+(0.5+Math.sin(time*6)*0.3).toFixed(2)+')';
+      ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(e.x,e.y,e.r*1.8*pulse,0,Math.PI*2); ctx.stroke();
     }
-
     ctx.fillStyle = e.hurt > 0 ? '#ff6a5a' : e.template.color;
-    ctx.beginPath();
-    ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2);
-    ctx.fill();
-
+    ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI*2); ctx.fill();
     ctx.strokeStyle = e.isElite ? 'rgba(212,175,55,0.9)' : 'rgba(0,0,0,0.6)';
-    ctx.lineWidth = e.isElite ? 3 : 2;
-    ctx.stroke();
-
-    ctx.strokeStyle = e.isElite ? '#d4af37' : '#221a16';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(e.x + Math.cos(e.angle) * 6, e.y + Math.sin(e.angle) * 6);
-    ctx.lineTo(e.x + Math.cos(e.angle) * 20, e.y + Math.sin(e.angle) * 20);
-    ctx.stroke();
-
+    ctx.lineWidth = e.isElite ? 3 : 2; ctx.stroke();
+    ctx.strokeStyle = e.isElite ? '#d4af37' : '#221a16'; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(e.x+Math.cos(e.angle)*6, e.y+Math.sin(e.angle)*6);
+    ctx.lineTo(e.x+Math.cos(e.angle)*20, e.y+Math.sin(e.angle)*20); ctx.stroke();
     if (e.hp < e.maxHp) {
       const bw = 30;
-      ctx.fillStyle = 'rgba(0,0,0,0.6)';
-      ctx.fillRect(e.x - bw / 2, e.y - e.r - 12, bw, 4);
-      ctx.fillStyle = e.isElite ? '#d4af37' : '#d94141';
-      ctx.fillRect(e.x - bw / 2, e.y - e.r - 12, bw * (e.hp / e.maxHp), 4);
+      ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(e.x-bw/2, e.y-e.r-12, bw, 4);
+      ctx.fillStyle = e.isElite ? '#d4af37' : '#d94141'; ctx.fillRect(e.x-bw/2, e.y-e.r-12, bw*(e.hp/e.maxHp), 4);
     }
-
-    const label = e.isElite ? '★ ' + e.template.name : e.template.name;
-    drawNameLabel(
-      label,
-      e.x,
-      e.y - e.r - (e.hp < e.maxHp ? 18 : 14),
-      e.isElite ? 'rgba(255,220,120,0.95)' : 'rgba(215,200,190,0.78)',
-      e.isElite ? 11 : 9.5
-    );
+    const label = e.isElite ? '★ '+e.template.name : e.template.name;
+    drawNameLabel(label, e.x, e.y-e.r-(e.hp<e.maxHp?18:14), e.isElite?'rgba(255,220,120,0.95)':'rgba(215,200,190,0.78)', e.isElite?11:9.5);
   }
 
   ctx.lineCap = 'round';
-  for (let i = 0; i < bullets.length; i++) {
+  for (let i=0;i<bullets.length;i++) {
     const b = bullets[i];
     const len = 0.022;
     ctx.strokeStyle = b.friendly ? 'rgba(255,235,170,0.95)' : 'rgba(255,140,90,0.95)';
     ctx.lineWidth = b.friendly ? 3 : 2.5;
-    ctx.beginPath();
-    ctx.moveTo(b.x, b.y);
-    ctx.lineTo(b.x - b.vx * len, b.y - b.vy * len);
-    ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(b.x,b.y); ctx.lineTo(b.x-b.vx*len, b.y-b.vy*len); ctx.stroke();
   }
   ctx.lineCap = 'butt';
 
-  for (let i = 0; i < player.drones.length; i++) {
+  for (let i=0;i<player.drones.length;i++) {
     const d = player.drones[i];
-    const a = player.droneAngle + (i * Math.PI * 2) / player.drones.length;
-    const dx = player.x + Math.cos(a) * d.dist;
-    const dy = player.y + Math.sin(a) * d.dist;
-    ctx.fillStyle = 'rgba(212,175,55,0.9)';
-    ctx.beginPath();
-    ctx.arc(dx, dy, 5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(255,220,120,0.6)';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
+    const a = player.droneAngle + (i*Math.PI*2)/player.drones.length;
+    const dx = player.x+Math.cos(a)*d.dist, dy = player.y+Math.sin(a)*d.dist;
+    ctx.fillStyle = 'rgba(212,175,55,0.9)'; ctx.beginPath(); ctx.arc(dx,dy,5,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,220,120,0.6)'; ctx.lineWidth = 1.5; ctx.stroke();
   }
 
-  for (let i = 0; i < allies.length; i++) {
+  for (let i=0;i<allies.length;i++) {
     const a = allies[i];
     if (a.x < vx0 || a.x > vx1 || a.y < vy0 || a.y > vy1) continue;
-
     ctx.fillStyle = 'rgba(0,0,0,0.45)';
-    ctx.beginPath();
-    ctx.ellipse(a.x + 3, a.y + 5, a.r * 1.05, a.r * 0.8, 0, 0, Math.PI * 2);
-    ctx.fill();
-
+    ctx.beginPath(); ctx.ellipse(a.x+3,a.y+5,a.r*1.05,a.r*0.8,0,0,Math.PI*2); ctx.fill();
     ctx.fillStyle = a.hurt > 0 ? '#c98a5a' : '#5a3d28';
-    ctx.beginPath();
-    ctx.arc(a.x, a.y, a.r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(212,175,55,0.75)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
+    ctx.beginPath(); ctx.arc(a.x,a.y,a.r,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = 'rgba(212,175,55,0.75)'; ctx.lineWidth = 2; ctx.stroke();
     ctx.fillStyle = '#d4af37';
-    ctx.beginPath();
-    ctx.arc(a.x, a.y - 2, a.r * 0.5, Math.PI, 0);
-    ctx.fill();
-    ctx.fillRect(a.x - a.r * 0.75, a.y - 4, a.r * 1.5, 3);
-
+    ctx.beginPath(); ctx.arc(a.x, a.y-2, a.r*0.5, Math.PI, 0); ctx.fill();
+    ctx.fillRect(a.x-a.r*0.75, a.y-4, a.r*1.5, 3);
     const punchOffset = a.punchT > 0 ? 16 : 8;
     ctx.fillStyle = '#7a5236';
-    ctx.beginPath();
-    ctx.arc(
-      a.x + Math.cos(a.angle) * punchOffset,
-      a.y + Math.sin(a.angle) * punchOffset,
-      4.5, 0, Math.PI * 2
-    );
-    ctx.fill();
-
+    ctx.beginPath(); ctx.arc(a.x+Math.cos(a.angle)*punchOffset, a.y+Math.sin(a.angle)*punchOffset, 4.5, 0, Math.PI*2); ctx.fill();
     const bw = 26;
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
-    ctx.fillRect(a.x - bw / 2, a.y - a.r - 12, bw, 3.5);
-    ctx.fillStyle = '#d4af37';
-    ctx.fillRect(a.x - bw / 2, a.y - a.r - 12, bw * clamp(a.hp / a.maxHp, 0, 1), 3.5);
-
-    drawNameLabel(a.name, a.x, a.y - a.r - 17, 'rgba(140,230,160,0.92)', 9.5);
+    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(a.x-bw/2, a.y-a.r-12, bw, 3.5);
+    ctx.fillStyle = '#d4af37'; ctx.fillRect(a.x-bw/2, a.y-a.r-12, bw*clamp(a.hp/a.maxHp,0,1), 3.5);
+    drawNameLabel(a.name, a.x, a.y-a.r-17, 'rgba(140,230,160,0.92)', 9.5);
   }
 
   if (player.hp > 0 || gameOver) {
     ctx.fillStyle = 'rgba(0,0,0,0.5)';
-    ctx.beginPath();
-    ctx.ellipse(player.x + 3, player.y + 5, player.r * 1.1, player.r * 0.85, 0, 0, Math.PI * 2);
-    ctx.fill();
-
+    ctx.beginPath(); ctx.ellipse(player.x+3, player.y+5, player.r*1.1, player.r*0.85, 0, 0, Math.PI*2); ctx.fill();
     ctx.fillStyle = '#3a2e22';
-    ctx.beginPath();
-    ctx.arc(player.x, player.y, player.r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(0,0,0,0.7)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
+    ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.7)'; ctx.lineWidth = 2; ctx.stroke();
     ctx.fillStyle = 'rgba(212,175,55,0.15)';
-    ctx.beginPath();
-    ctx.arc(player.x - 2, player.y - 2, player.r * 0.62, 0, Math.PI * 2);
-    ctx.fill();
-
+    ctx.beginPath(); ctx.arc(player.x-2, player.y-2, player.r*0.62, 0, Math.PI*2); ctx.fill();
     const ga = player.angle;
-    ctx.strokeStyle = '#1b1b1f';
-    ctx.lineWidth = 5;
-    ctx.beginPath();
-    ctx.moveTo(player.x + Math.cos(ga) * 7, player.y + Math.sin(ga) * 7);
-    ctx.lineTo(player.x + Math.cos(ga) * 22, player.y + Math.sin(ga) * 22);
-    ctx.stroke();
-
+    ctx.strokeStyle = '#1b1b1f'; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(player.x+Math.cos(ga)*7, player.y+Math.sin(ga)*7);
+    ctx.lineTo(player.x+Math.cos(ga)*22, player.y+Math.sin(ga)*22); ctx.stroke();
     ctx.fillStyle = '#4a4a52';
-    ctx.beginPath();
-    ctx.arc(player.x + Math.cos(ga) * 22, player.y + Math.sin(ga) * 22, 2.6, 0, Math.PI * 2);
-    ctx.fill();
-
-    drawNameLabel(player.name, player.x, player.y - player.r - 10, 'rgba(255,220,130,0.98)', 11.5);
+    ctx.beginPath(); ctx.arc(player.x+Math.cos(ga)*22, player.y+Math.sin(ga)*22, 2.6, 0, Math.PI*2); ctx.fill();
+    drawNameLabel(player.name, player.x, player.y-player.r-10, 'rgba(255,220,130,0.98)', 11.5);
   }
 
-  for (let i = 0; i < particles.length; i++) {
+  for (let i=0;i<particles.length;i++) {
     const p = particles[i];
-    const a = Math.max(0, p.life / p.maxLife);
-    ctx.fillStyle = 'rgba(' + p.color + ',' + a.toFixed(3) + ')';
-    const s = p.size * (0.4 + a * 0.6);
-    ctx.fillRect(p.x - s / 2, p.y - s / 2, s, s);
+    const a = Math.max(0, p.life/p.maxLife);
+    ctx.fillStyle = 'rgba('+p.color+','+a.toFixed(3)+')';
+    const s = p.size*(0.4+a*0.6);
+    ctx.fillRect(p.x-s/2, p.y-s/2, s, s);
   }
 
   ctx.restore();
 
-  if (vignette) {
-    ctx.fillStyle = vignette;
-    ctx.fillRect(0, 0, W, H);
-  }
-
-  if (hitFlash > 0.01) {
-    ctx.fillStyle = 'rgba(180,20,20,' + (hitFlash * 0.35).toFixed(3) + ')';
-    ctx.fillRect(0, 0, W, H);
-  }
+  if (vignette) { ctx.fillStyle = vignette; ctx.fillRect(0, 0, W, H); }
+  if (hitFlash > 0.01) { ctx.fillStyle = 'rgba(180,20,20,'+(hitFlash*0.35).toFixed(3)+')'; ctx.fillRect(0, 0, W, H); }
 
   drawCityUI();
 }
@@ -1938,146 +1681,127 @@ function renderCity() {
 /* ================= 副地图渲染 ================= */
 function renderSubMap(mapState, type) {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-
   const isFarm = type === 'cotton';
+  const cfg = isFarm ? mode.subMaps.farm : mode.subMaps.mine;
   const mapW = FARM_MAP_W, mapH = FARM_MAP_H;
 
   ctx.fillStyle = isFarm ? '#1a2a18' : '#141416';
   ctx.fillRect(0, 0, W, H);
 
-  const scale = Math.min(W / mapW, H / mapH) * 0.78;
-  const offsetX = (W - mapW * scale) / 2;
-  const offsetY = (H - mapH * scale) / 2 + 20;
+  if (mapState.boostTimer > 0) {
+    const inten = Math.min(1, mapState.boostTimer/3) * 0.10;
+    const bc = mode.boost.color;
+    ctx.fillStyle = 'rgba('+bc[0]+','+bc[1]+','+bc[2]+','+inten.toFixed(3)+')';
+    ctx.fillRect(0, 0, W, H);
+  }
+  if (mapState.whipFlash > 0) {
+    const bc = mode.boost.color;
+    ctx.fillStyle = 'rgba('+bc[0]+','+bc[1]+','+bc[2]+','+(mapState.whipFlash*0.5).toFixed(3)+')';
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  const scale = Math.min(W/mapW, H/mapH) * 0.78;
+  const offsetX = (W-mapW*scale)/2, offsetY = (H-mapH*scale)/2 + 20;
 
   ctx.save();
   ctx.translate(offsetX, offsetY);
   ctx.scale(scale, scale);
 
-  ctx.fillStyle = isFarm ? '#22301e' : '#1c1c22';
+  ctx.fillStyle = cfg.mapColor;
   ctx.fillRect(0, 0, mapW, mapH);
 
   ctx.strokeStyle = isFarm ? 'rgba(60,90,50,0.25)' : 'rgba(70,70,80,0.25)';
   ctx.lineWidth = 1;
   const gridStep = 100;
-  for (let gx = 0; gx <= mapW; gx += gridStep) {
-    ctx.beginPath();
-    ctx.moveTo(gx, 0);
-    ctx.lineTo(gx, mapH);
-    ctx.stroke();
-  }
-  for (let gy = 0; gy <= mapH; gy += gridStep) {
-    ctx.beginPath();
-    ctx.moveTo(0, gy);
-    ctx.lineTo(mapW, gy);
-    ctx.stroke();
-  }
+  for (let gx=0;gx<=mapW;gx+=gridStep) { ctx.beginPath(); ctx.moveTo(gx,0); ctx.lineTo(gx,mapH); ctx.stroke(); }
+  for (let gy=0;gy<=mapH;gy+=gridStep) { ctx.beginPath(); ctx.moveTo(0,gy); ctx.lineTo(mapW,gy); ctx.stroke(); }
 
-  // 仓库
   const wx = SUBMAP_CENTER_X, wy = SUBMAP_CENTER_Y;
-  ctx.fillStyle = 'rgba(0,0,0,0.4)';
-  ctx.fillRect(wx - 60 + 6, wy - 40 + 8, 120, 80);
-  ctx.fillStyle = '#3a2e22';
-  ctx.fillRect(wx - 60, wy - 40, 120, 80);
-  ctx.strokeStyle = 'rgba(212,175,55,0.7)';
-  ctx.lineWidth = 3;
-  ctx.strokeRect(wx - 60, wy - 40, 120, 80);
-  ctx.fillStyle = 'rgba(212,175,55,0.12)';
-  ctx.fillRect(wx - 58, wy - 38, 116, 76);
+  ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fillRect(wx-60+6, wy-40+8, 120, 80);
+  ctx.fillStyle = '#3a2e22'; ctx.fillRect(wx-60, wy-40, 120, 80);
+  ctx.strokeStyle = 'rgba(212,175,55,0.7)'; ctx.lineWidth = 3; ctx.strokeRect(wx-60, wy-40, 120, 80);
+  ctx.fillStyle = 'rgba(212,175,55,0.12)'; ctx.fillRect(wx-58, wy-38, 116, 76);
   ctx.fillStyle = 'rgba(212,175,55,0.85)';
   ctx.font = 'bold 18px "Courier New", monospace';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText('仓 库', wx, wy);
 
-  // 资源点
   for (const n of mapState.nodes) {
     if (n.amount <= 0) {
       ctx.fillStyle = isFarm ? 'rgba(60,80,50,0.4)' : 'rgba(60,60,70,0.4)';
-      ctx.beginPath();
-      ctx.arc(n.x, n.y, n.r * 0.6, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.beginPath(); ctx.arc(n.x, n.y, n.r*0.6, 0, Math.PI*2); ctx.fill();
       continue;
     }
     if (isFarm) {
-      // 棉花丛
       ctx.fillStyle = 'rgba(80,120,60,0.6)';
-      ctx.beginPath();
-      ctx.arc(n.x, n.y + 4, n.r + 4, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = 'rgba(235,235,220,0.95)';
-      for (let k = 0; k < 4; k++) {
-        const ang = k * Math.PI / 2 + 0.4;
-        ctx.beginPath();
-        ctx.arc(n.x + Math.cos(ang) * 7, n.y + Math.sin(ang) * 7, 6, 0, Math.PI * 2);
-        ctx.fill();
+      ctx.beginPath(); ctx.arc(n.x, n.y+4, n.r+4, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = cfg.nodeFill;
+      for (let k=0;k<4;k++) {
+        const ang = k*Math.PI/2 + 0.4;
+        ctx.beginPath(); ctx.arc(n.x+Math.cos(ang)*7, n.y+Math.sin(ang)*7, 6, 0, Math.PI*2); ctx.fill();
       }
-      ctx.fillStyle = 'rgba(255,255,255,0.95)';
-      ctx.beginPath();
-      ctx.arc(n.x, n.y, 7, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.beginPath(); ctx.arc(n.x, n.y, 7, 0, Math.PI*2); ctx.fill();
     } else {
-      // 金矿脉
       ctx.fillStyle = 'rgba(120,90,30,0.65)';
-      ctx.beginPath();
-      ctx.arc(n.x, n.y + 4, n.r + 4, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#d4af37';
-      ctx.beginPath();
-      ctx.moveTo(n.x, n.y - 13);
-      ctx.lineTo(n.x + 11, n.y);
-      ctx.lineTo(n.x, n.y + 13);
-      ctx.lineTo(n.x - 11, n.y);
-      ctx.closePath();
-      ctx.fill();
+      ctx.beginPath(); ctx.arc(n.x, n.y+4, n.r+4, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = cfg.nodeFill;
+      ctx.beginPath(); ctx.moveTo(n.x, n.y-13); ctx.lineTo(n.x+11, n.y); ctx.lineTo(n.x, n.y+13); ctx.lineTo(n.x-11, n.y); ctx.closePath(); ctx.fill();
       ctx.fillStyle = 'rgba(255,240,180,0.9)';
-      ctx.beginPath();
-      ctx.moveTo(n.x, n.y - 8);
-      ctx.lineTo(n.x + 6, n.y);
-      ctx.lineTo(n.x, n.y + 8);
-      ctx.lineTo(n.x - 6, n.y);
-      ctx.closePath();
-      ctx.fill();
+      ctx.beginPath(); ctx.moveTo(n.x, n.y-8); ctx.lineTo(n.x+6, n.y); ctx.lineTo(n.x, n.y+8); ctx.lineTo(n.x-6, n.y); ctx.closePath(); ctx.fill();
     }
   }
 
-  // 工人
+  const boostActive = mapState.boostTimer > 0;
+  const bc = mode.boost.color;
+
   for (const a of mapState.allies) {
     ctx.fillStyle = 'rgba(0,0,0,0.4)';
-    ctx.beginPath();
-    ctx.ellipse(a.x + 2, a.y + 4, a.r * 1.05, a.r * 0.8, 0, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.beginPath(); ctx.ellipse(a.x+2, a.y+4, a.r*1.05, a.r*0.8, 0, 0, Math.PI*2); ctx.fill();
 
-    ctx.fillStyle = '#5a3d28';
-    ctx.beginPath();
-    ctx.arc(a.x, a.y, a.r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(212,175,55,0.7)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    const hpRatio = clamp(a.hp/a.maxHp, 0, 1);
+    let bodyColor = '#5a3d28';
+    if (a.hurtT > 0) bodyColor = 'rgb('+Math.min(180,bc[0]+40)+','+Math.min(80,bc[1])+',30)';
+    else if (hpRatio < 0.35) bodyColor = '#6a2a1a';
+
+    ctx.fillStyle = bodyColor;
+    ctx.beginPath(); ctx.arc(a.x, a.y, a.r, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = 'rgba(212,175,55,0.7)'; ctx.lineWidth = 2; ctx.stroke();
 
     ctx.fillStyle = '#d4af37';
-    ctx.beginPath();
-    ctx.arc(a.x, a.y - 2, a.r * 0.5, Math.PI, 0);
-    ctx.fill();
-    ctx.fillRect(a.x - a.r * 0.75, a.y - 4, a.r * 1.5, 3);
+    ctx.beginPath(); ctx.arc(a.x, a.y-2, a.r*0.5, Math.PI, 0); ctx.fill();
+    ctx.fillRect(a.x-a.r*0.75, a.y-4, a.r*1.5, 3);
+
+    if (boostActive) {
+      const trailDir = a.angle + Math.PI;
+      for (let k=1;k<=3;k++) {
+        ctx.fillStyle = 'rgba('+bc[0]+','+bc[1]+','+bc[2]+','+(0.25-k*0.07).toFixed(2)+')';
+        ctx.beginPath(); ctx.arc(a.x+Math.cos(trailDir)*k*7, a.y+Math.sin(trailDir)*k*7, a.r*(1-k*0.15), 0, Math.PI*2); ctx.fill();
+      }
+    }
+
+    const bw = 22;
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillRect(a.x-bw/2, a.y-a.r-10, bw, 3);
+    ctx.fillStyle = hpRatio > 0.5 ? '#d4af37' : (hpRatio > 0.25 ? '#e0a040' : '#d94141');
+    ctx.fillRect(a.x-bw/2, a.y-a.r-10, bw*hpRatio, 3);
 
     if (a.state === 'collecting') {
-      const pulse = 0.5 + Math.sin(time * 20) * 0.5;
-      ctx.strokeStyle = 'rgba(255,240,180,' + pulse.toFixed(2) + ')';
+      const pulse = 0.5 + Math.sin(time*20)*0.5;
+      ctx.strokeStyle = boostActive ? 'rgba('+bc[0]+','+bc[1]+','+bc[2]+','+pulse.toFixed(2)+')' : 'rgba(255,240,180,'+pulse.toFixed(2)+')';
       ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(a.x, a.y, a.r + 6, 0, Math.PI * 2);
-      ctx.stroke();
+      ctx.beginPath(); ctx.arc(a.x, a.y, a.r+6, 0, Math.PI*2); ctx.stroke();
+    }
+
+    if (a.hurtT > 0) {
+      ctx.strokeStyle = 'rgba(255,40,20,'+(a.hurtT*2).toFixed(2)+')';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(a.x, a.y, a.r+8, 0, Math.PI*2); ctx.stroke();
     }
   }
 
   ctx.restore();
 
-  if (vignette) {
-    ctx.fillStyle = vignette;
-    ctx.fillRect(0, 0, W, H);
-  }
-
+  if (vignette) { ctx.fillStyle = vignette; ctx.fillRect(0, 0, W, H); }
   drawSubMapUI(mapState, type);
 }
 
@@ -2090,87 +1814,76 @@ function drawGlobalUI() {
   const btnW = 78, btnH = 34, gap = 8;
   const startX = 18;
   const mapBtns = [
-    { label: '小镇', target: 'city' },
-    { label: '棉花农场', target: 'farm' },
-    { label: '金矿矿洞', target: 'mine' }
+    { label:'主城', target:'city' },
+    { label: mode.subMaps.farm.shortName, target:'farm' },
+    { label: mode.subMaps.mine.shortName, target:'mine' }
   ];
-  for (let i = 0; i < mapBtns.length; i++) {
-    const bx = startX + i * (btnW + gap);
+  for (let i=0;i<mapBtns.length;i++) {
+    const bx = startX + i*(btnW+gap);
     const active = currentMap === mapBtns[i].target;
     ctx.fillStyle = active ? 'rgba(212,175,55,0.28)' : 'rgba(0,0,0,0.5)';
     ctx.fillRect(bx, topY, btnW, btnH);
     ctx.strokeStyle = active ? 'rgba(212,175,55,0.9)' : 'rgba(212,175,55,0.3)';
     ctx.lineWidth = active ? 2 : 1;
-    ctx.strokeRect(bx + 0.5, topY + 0.5, btnW - 1, btnH - 1);
+    ctx.strokeRect(bx+0.5, topY+0.5, btnW-1, btnH-1);
     ctx.fillStyle = active ? 'rgba(255,230,160,0.98)' : 'rgba(212,175,55,0.7)';
     ctx.font = 'bold 14px "Courier New", monospace';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(mapBtns[i].label, bx + btnW / 2, topY + btnH / 2 + 1);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(mapBtns[i].label, bx+btnW/2, topY+btnH/2+1);
   }
 
   ctx.fillStyle = 'rgba(0,0,0,0.55)';
-  ctx.fillRect(W - 230, topY, 100, btnH);
-  ctx.strokeStyle = 'rgba(212,175,55,0.4)';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(W - 230 + 0.5, topY + 0.5, 99, btnH - 1);
+  ctx.fillRect(W-230, topY, 100, btnH);
+  ctx.strokeStyle = 'rgba(212,175,55,0.4)'; ctx.lineWidth = 1;
+  ctx.strokeRect(W-230+0.5, topY+0.5, 99, btnH-1);
   ctx.fillStyle = 'rgba(255,220,120,0.95)';
   ctx.font = 'bold 16px "Courier New", monospace';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('$ ' + money, W - 180, topY + btnH / 2 + 1);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('$ '+money, W-180, topY+btnH/2+1);
 
-  const shopBtnX = W - 120, shopBtnY = topY, shopBtnW = 100, shopBtnH = btnH;
+  const shopBtnX = W-120, shopBtnY = topY, shopBtnW = 100, shopBtnH = btnH;
   ctx.fillStyle = shopOpen ? 'rgba(212,175,55,0.28)' : 'rgba(0,0,0,0.5)';
   ctx.fillRect(shopBtnX, shopBtnY, shopBtnW, shopBtnH);
   ctx.strokeStyle = shopOpen ? 'rgba(212,175,55,0.9)' : 'rgba(212,175,55,0.3)';
   ctx.lineWidth = shopOpen ? 2 : 1;
-  ctx.strokeRect(shopBtnX + 0.5, shopBtnY + 0.5, shopBtnW - 1, shopBtnH - 1);
+  ctx.strokeRect(shopBtnX+0.5, shopBtnY+0.5, shopBtnW-1, shopBtnH-1);
   ctx.fillStyle = 'rgba(212,175,55,0.9)';
   ctx.font = 'bold 14px "Courier New", monospace';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('商 店', shopBtnX + shopBtnW / 2, shopBtnY + shopBtnH / 2 + 1);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('商 店', shopBtnX+shopBtnW/2, shopBtnY+shopBtnH/2+1);
 
   drawTransportQueue();
-
   ctx.restore();
 }
 
 function drawTransportQueue() {
   if (transports.length === 0) return;
-  const startY = 62;
-  const bw = 200, bh = 24;
-  const bx = W - bw - 18;
-
+  const startY = 62, bw = 200, bh = 24;
+  const bx = W-bw-18;
   ctx.font = 'bold 11px "Courier New", monospace';
-  for (let i = 0; i < transports.length && i < 6; i++) {
+  for (let i=0;i<transports.length && i<6;i++) {
     const t = transports[i];
-    const by = startY + i * (bh + 6);
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
-    ctx.fillRect(bx, by, bw, bh);
-    ctx.strokeStyle = 'rgba(212,175,55,0.4)';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(bx + 0.5, by + 0.5, bw - 1, bh - 1);
-
+    const by = startY + i*(bh+6);
+    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(bx, by, bw, bh);
+    ctx.strokeStyle = 'rgba(212,175,55,0.4)'; ctx.lineWidth = 1;
+    ctx.strokeRect(bx+0.5, by+0.5, bw-1, bh-1);
     let label = '';
-    if (t.type === 'ally-to-farm') label = '兄弟→农场';
-    else if (t.type === 'ally-to-mine') label = '兄弟→矿洞';
-    else if (t.type === 'ally-to-city') label = '兄弟→小镇';
-    else if (t.type === 'resource') label = (t.resourceType === 'cotton' ? '棉花' : '金矿') + '回城';
-
+    if (t.type === 'ally-to-farm') label = '兄弟→'+mode.subMaps.farm.shortName;
+    else if (t.type === 'ally-to-mine') label = '兄弟→'+mode.subMaps.mine.shortName;
+    else if (t.type === 'ally-to-city') label = '兄弟→主城';
+    else if (t.type === 'resource') {
+      const cfg = t.resourceType === 'farm' ? mode.subMaps.farm : mode.subMaps.mine;
+      label = cfg.resourceName + '回城';
+    }
     ctx.fillStyle = 'rgba(212,175,55,0.9)';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(label, bx + 8, by + bh / 2 + 1);
-
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText(label, bx+8, by+bh/2+1);
     ctx.textAlign = 'right';
     ctx.fillStyle = 'rgba(255,240,200,0.95)';
-    ctx.fillText(Math.ceil(t.timer) + 's', bx + bw - 8, by + bh / 2 + 1);
-
-    const prog = 1 - t.timer / t.maxTime;
+    ctx.fillText(Math.ceil(t.timer)+'s', bx+bw-8, by+bh/2+1);
+    const prog = 1 - t.timer/t.maxTime;
     ctx.fillStyle = 'rgba(212,175,55,0.5)';
-    ctx.fillRect(bx, by + bh - 3, bw * prog, 3);
+    ctx.fillRect(bx, by+bh-3, bw*prog, 3);
   }
 }
 
@@ -2181,74 +1894,57 @@ function drawCityUI() {
 
   if (!isTouchMode) {
     const mx = mouse.x, my = mouse.y;
-    ctx.strokeStyle = 'rgba(212,175,55,0.8)';
-    ctx.lineWidth = 1.6;
+    ctx.strokeStyle = 'rgba(212,175,55,0.8)'; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.arc(mx, my, 9, 0, Math.PI*2); ctx.stroke();
     ctx.beginPath();
-    ctx.arc(mx, my, 9, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(mx - 16, my); ctx.lineTo(mx - 6, my);
-    ctx.moveTo(mx + 6, my); ctx.lineTo(mx + 16, my);
-    ctx.moveTo(mx, my - 16); ctx.lineTo(mx, my - 6);
-    ctx.moveTo(mx, my + 6); ctx.lineTo(mx, my + 16);
+    ctx.moveTo(mx-16, my); ctx.lineTo(mx-6, my);
+    ctx.moveTo(mx+6, my); ctx.lineTo(mx+16, my);
+    ctx.moveTo(mx, my-16); ctx.lineTo(mx, my-6);
+    ctx.moveTo(mx, my+6); ctx.lineTo(mx, my+16);
     ctx.stroke();
     ctx.fillStyle = 'rgba(212,175,55,0.9)';
-    ctx.fillRect(mx - 1.5, my - 1.5, 3, 3);
+    ctx.fillRect(mx-1.5, my-1.5, 3, 3);
   }
 
-  const bw = Math.min(260, W * 0.38);
-  const bh = 12;
-  const bx = 22;
-  const by = H - 50;
-  const ratio = clamp(player.hp / player.maxHp, 0, 1);
-
-  ctx.fillStyle = 'rgba(0,0,0,0.65)';
-  ctx.fillRect(bx - 3, by - 3, bw + 6, bh + 6);
-  ctx.fillStyle = '#3a1010';
-  ctx.fillRect(bx, by, bw, bh);
-  ctx.fillStyle = ratio > 0.35 ? '#c0392b' : '#e74c3c';
-  ctx.fillRect(bx, by, bw * ratio, bh);
-  ctx.fillStyle = 'rgba(212,175,55,0.25)';
-  ctx.fillRect(bx, by, bw * ratio, 3);
-
+  const bw = Math.min(260, W*0.38), bh = 12;
+  const bx = 22, by = H-50;
+  const ratio = clamp(player.hp/player.maxHp, 0, 1);
+  ctx.fillStyle = 'rgba(0,0,0,0.65)'; ctx.fillRect(bx-3, by-3, bw+6, bh+6);
+  ctx.fillStyle = '#3a1010'; ctx.fillRect(bx, by, bw, bh);
+  ctx.fillStyle = ratio > 0.35 ? '#c0392b' : '#e74c3c'; ctx.fillRect(bx, by, bw*ratio, bh);
+  ctx.fillStyle = 'rgba(212,175,55,0.25)'; ctx.fillRect(bx, by, bw*ratio, 3);
   ctx.font = 'bold 12px "Courier New", monospace';
   ctx.fillStyle = 'rgba(255,230,200,0.9)';
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('生命 ' + Math.max(0, Math.ceil(player.hp)), bx + 4, by + bh / 2 + 1);
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.fillText('生命 '+Math.max(0, Math.ceil(player.hp)), bx+4, by+bh/2+1);
 
   ctx.textAlign = 'right';
   ctx.font = 'bold 26px "Courier New", monospace';
   ctx.fillStyle = player.reloadT > 0 ? 'rgba(220,160,60,0.9)' : 'rgba(255,235,190,0.95)';
-  ctx.fillText(
-    player.reloadT > 0 ? '装填中…' : (player.ammo + ' / ' + player.mag),
-    W - 22, H - 58
-  );
+  ctx.fillText(player.reloadT > 0 ? '装填中…' : (player.ammo+' / '+player.mag), W-22, H-58);
 
   ctx.textAlign = 'left';
   ctx.font = 'bold 14px "Courier New", monospace';
   ctx.fillStyle = 'rgba(212,175,55,0.85)';
-  ctx.fillText('等级 ' + level, 22, 34);
-  const xpRatio = clamp(xp / xpNext, 0, 1);
-  ctx.fillStyle = 'rgba(0,0,0,0.5)';
-  ctx.fillRect(22, 44, 110, 5);
-  ctx.fillStyle = 'rgba(212,175,55,0.85)';
-  ctx.fillRect(22, 44, 110 * xpRatio, 5);
+  ctx.fillText('等级 '+level, 22, 34);
+  const xpRatio = clamp(xp/xpNext, 0, 1);
+  ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(22, 44, 110, 5);
+  ctx.fillStyle = 'rgba(212,175,55,0.85)'; ctx.fillRect(22, 44, 110*xpRatio, 5);
 
   ctx.font = 'bold 12px "Courier New", monospace';
   ctx.fillStyle = 'rgba(255,220,160,0.7)';
-  ctx.fillText('清除 ' + kills, 22, 66);
+  ctx.fillText('清除 '+kills, 22, 66);
 
   ctx.font = 'bold 12px "Courier New", monospace';
   ctx.fillStyle = 'rgba(212,175,55,0.85)';
-  let allyTxt = '黑人兄弟 ';
-  for (let i = 0; i < MAX_ALLIES; i++) allyTxt += i < allies.length ? '●' : '○';
+  let allyTxt = mode.allyLabel+' ';
+  for (let i=0;i<MAX_ALLIES;i++) allyTxt += i < allies.length ? '●' : '○';
   ctx.fillText(allyTxt, 22, 86);
 
   if (combo > 1 && comboTimer > 0) {
     ctx.font = 'bold 24px "Courier New", monospace';
-    ctx.fillStyle = 'rgba(255,140,70,' + clamp(comboTimer / 2.2, 0, 1).toFixed(2) + ')';
-    ctx.fillText('×' + combo, 22, 116);
+    ctx.fillStyle = 'rgba(255,140,70,'+clamp(comboTimer/2.2,0,1).toFixed(2)+')';
+    ctx.fillText('×'+combo, 22, 116);
   }
 
   drawMinimap();
@@ -2256,7 +1952,7 @@ function drawCityUI() {
   ctx.textAlign = 'center';
   ctx.font = 'bold 11px "Courier New", monospace';
   ctx.fillStyle = 'rgba(212,175,55,0.35)';
-  ctx.fillText('暗 巷 · 棉 花 与 黄 金 1 8 3 5', W / 2, 24);
+  ctx.fillText('暗 巷 · '+mode.title+' '+mode.year, W/2, 24);
 
   if (isTouchMode) {
     drawStick(moveStick, '110,200,255', '移动');
@@ -2264,24 +1960,21 @@ function drawCityUI() {
     drawDashButton();
   }
 
-  if (pausedForUpgrade && upgradeUI) {
-    drawUpgradeUI();
-  }
+  if (pausedForUpgrade && upgradeUI) drawUpgradeUI();
 
   if (gameOver) {
-    ctx.fillStyle = 'rgba(10,5,0,0.72)';
-    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = 'rgba(10,5,0,0.72)'; ctx.fillRect(0, 0, W, H);
     ctx.textAlign = 'center';
     ctx.fillStyle = 'rgba(212,175,55,0.95)';
-    const fs = Math.min(58, W * 0.12);
-    ctx.font = 'bold ' + fs + 'px "Courier New", monospace';
-    ctx.fillText('倒 下 了', W / 2, H / 2 - 26);
+    const fs = Math.min(58, W*0.12);
+    ctx.font = 'bold '+fs+'px "Courier New", monospace';
+    ctx.fillText('倒 下 了', W/2, H/2-26);
     ctx.fillStyle = 'rgba(255,220,190,0.85)';
-    ctx.font = 'bold ' + Math.min(20, W * 0.048) + 'px "Courier New", monospace';
-    ctx.fillText('生存等级 ' + level + ' · 清除 ' + kills + ' 人', W / 2, H / 2 + 26);
-    ctx.fillStyle = 'rgba(255,255,255,' + (0.4 + Math.sin(time * 4) * 0.3).toFixed(2) + ')';
-    ctx.font = 'bold ' + Math.min(17, W * 0.042) + 'px "Courier New", monospace';
-    ctx.fillText(isTouchMode ? '点击此处重新开始' : '按 R 重新开始', W / 2, H / 2 + 78);
+    ctx.font = 'bold '+Math.min(20, W*0.048)+'px "Courier New", monospace';
+    ctx.fillText('生存等级 '+level+' · 清除 '+kills+' 人', W/2, H/2+26);
+    ctx.fillStyle = 'rgba(255,255,255,'+(0.4+Math.sin(time*4)*0.3).toFixed(2)+')';
+    ctx.font = 'bold '+Math.min(17, W*0.042)+'px "Courier New", monospace';
+    ctx.fillText(isTouchMode ? '点击此处重新开始' : '按 R 重新开始', W/2, H/2+78);
   }
 
   ctx.restore();
@@ -2291,61 +1984,94 @@ function drawCityUI() {
 function drawSubMapUI(mapState, type) {
   ctx.save();
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-
   const isFarm = type === 'cotton';
+  const cfg = isFarm ? mode.subMaps.farm : mode.subMaps.mine;
+  const boost = mode.boost;
 
   const infoY = 60;
   ctx.fillStyle = 'rgba(0,0,0,0.55)';
-  ctx.fillRect(W / 2 - 150, infoY, 300, 44);
-  ctx.strokeStyle = 'rgba(212,175,55,0.4)';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(W / 2 - 150 + 0.5, infoY + 0.5, 299, 43);
+  ctx.fillRect(W/2-150, infoY, 300, 44);
+  ctx.strokeStyle = 'rgba(212,175,55,0.4)'; ctx.lineWidth = 1;
+  ctx.strokeRect(W/2-150+0.5, infoY+0.5, 299, 43);
 
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.font = 'bold 14px "Courier New", monospace';
   ctx.fillStyle = 'rgba(212,175,55,0.95)';
-  const title = isFarm ? '棉花农场' : '金矿矿洞';
-  ctx.fillText(title, W / 2, infoY + 16);
+  ctx.fillText(cfg.name, W/2, infoY+16);
 
   ctx.font = 'bold 13px "Courier New", monospace';
   ctx.fillStyle = 'rgba(255,240,200,0.9)';
-  const resourceLabel = isFarm ? '棉花' : '金矿';
-  ctx.fillText('仓库: ' + Math.floor(mapState.warehouse) + ' ' + resourceLabel +
-    '  ·  兄弟: ' + mapState.allies.length + ' 人', W / 2, infoY + 32);
+  ctx.fillText('仓库: '+Math.floor(mapState.warehouse)+' '+cfg.resourceName+'  ·  兄弟: '+mapState.allies.length+' 人', W/2, infoY+32);
 
-  const btnW = Math.min(180, W * 0.4);
+  // 加速按钮
+  const boostBtnW = Math.min(280, W*0.58);
+  const boostBtnH = 50;
+  const boostBtnX = (W-boostBtnW)/2;
+  const boostBtnY = 112;
+  const boostActive = mapState.boostTimer > 0;
+  const stacks = mapState.boostStacks;
+  const bc = boost.color;
+  const pulse = 0.6 + Math.sin(time*8)*0.4;
+  const onCooldown = mapState.boostCooldown > 0;
+
+  if (boostActive) ctx.fillStyle = 'rgba('+bc[0]+','+bc[1]+','+bc[2]+','+(0.35+pulse*0.25).toFixed(2)+')';
+  else if (onCooldown) ctx.fillStyle = 'rgba(40,30,20,0.7)';
+  else ctx.fillStyle = 'rgba(50,30,18,0.65)';
+  ctx.fillRect(boostBtnX, boostBtnY, boostBtnW, boostBtnH);
+  ctx.strokeStyle = boostActive ? 'rgba('+bc[0]+','+bc[1]+','+bc[2]+',0.95)' : 'rgba('+bc[0]+','+bc[1]+','+bc[2]+',0.5)';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(boostBtnX+0.5, boostBtnY+0.5, boostBtnW-1, boostBtnH-1);
+
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = 'bold 15px "Courier New", monospace';
+  ctx.fillStyle = boostActive ? 'rgba(255,240,220,0.98)' : 'rgba(255,210,170,0.95)';
+
+  let mainText = boost.name;
+  if (boostActive) {
+    const pct = Math.round(stacks * boost.boostPerStack * 100);
+    mainText = boost.name+' +'+pct+'%  ·  '+Math.ceil(mapState.boostTimer)+'s';
+  }
+  if (onCooldown) mainText = '冷却中 '+Math.ceil(mapState.boostCooldown)+'s';
+  ctx.fillText(mainText, W/2, boostBtnY+17);
+
+  ctx.font = 'bold 10px "Courier New", monospace';
+  ctx.fillStyle = 'rgba(255,210,190,0.7)';
+  let subText = '';
+  if (boost.type === 'whip') subText = '全体兄弟 -'+boost.hpCost+' 血 · 可叠至 +100%';
+  else if (boost.type === 'money') subText = '花费 $'+boost.cost+' · 可叠至 +100%';
+  else if (boost.type === 'faith') subText = '无代价 · '+boost.cooldown+'秒冷却 · 可叠至 +100%';
+  ctx.fillText(subText, W/2, boostBtnY+35);
+
+  // 运送 / 召回
+  const btnW = Math.min(180, W*0.4);
   const btnH = 48;
-  const bx1 = 30, by1 = H - 70;
-  const bx2 = W - btnW - 30, by2 = H - 70;
+  const bx1 = 30, by1 = H-70;
+  const bx2 = W-btnW-30, by2 = H-70;
 
   const canShip = Math.floor(mapState.warehouse) > 0;
   ctx.fillStyle = canShip ? 'rgba(212,175,55,0.28)' : 'rgba(0,0,0,0.5)';
   ctx.fillRect(bx1, by1, btnW, btnH);
   ctx.strokeStyle = canShip ? 'rgba(212,175,55,0.9)' : 'rgba(212,175,55,0.25)';
   ctx.lineWidth = 2;
-  ctx.strokeRect(bx1 + 0.5, by1 + 0.5, btnW - 1, btnH - 1);
+  ctx.strokeRect(bx1+0.5, by1+0.5, btnW-1, btnH-1);
   ctx.fillStyle = canShip ? 'rgba(255,240,200,0.98)' : 'rgba(212,175,55,0.35)';
   ctx.font = 'bold 15px "Courier New", monospace';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('运送' + resourceLabel + '回城', bx1 + btnW / 2, by1 + btnH / 2 + 1);
+  ctx.fillText('运送'+cfg.resourceName+'回城', bx1+btnW/2, by1+btnH/2+1);
 
   const canRecall = mapState.allies.length > 0;
   ctx.fillStyle = canRecall ? 'rgba(120,200,140,0.22)' : 'rgba(0,0,0,0.5)';
   ctx.fillRect(bx2, by2, btnW, btnH);
   ctx.strokeStyle = canRecall ? 'rgba(120,220,140,0.85)' : 'rgba(120,220,140,0.25)';
   ctx.lineWidth = 2;
-  ctx.strokeRect(bx2 + 0.5, by2 + 0.5, btnW - 1, btnH - 1);
+  ctx.strokeRect(bx2+0.5, by2+0.5, btnW-1, btnH-1);
   ctx.fillStyle = canRecall ? 'rgba(200,255,210,0.95)' : 'rgba(120,220,140,0.35)';
   ctx.font = 'bold 15px "Courier New", monospace';
-  ctx.fillText('召回兄弟', bx2 + btnW / 2, by2 + btnH / 2 + 1);
+  ctx.fillText('召回兄弟', bx2+btnW/2, by2+btnH/2+1);
 
   ctx.font = 'bold 11px "Courier New", monospace';
   ctx.fillStyle = 'rgba(200,190,170,0.5)';
   ctx.textAlign = 'center';
-  ctx.fillText('兄弟在资源点采集 · 每次采集 1 秒 · 运送需 10 秒', W / 2, H - 16);
-
+  ctx.fillText('兄弟在资源点采集 · 每次 1 秒 · 运送需 10 秒', W/2, H-16);
   ctx.restore();
 }
 
@@ -2353,349 +2079,247 @@ function drawSubMapUI(mapState, type) {
 function drawShop() {
   ctx.save();
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(0, 0, W, H);
 
-  ctx.fillStyle = 'rgba(0,0,0,0.6)';
-  ctx.fillRect(0, 0, W, H);
+  const panelW = Math.min(420, W-40), panelH = 450;
+  const px = (W-panelW)/2, py = (H-panelH)/2;
+  ctx.fillStyle = 'rgba(20,15,10,0.96)'; ctx.fillRect(px, py, panelW, panelH);
+  ctx.strokeStyle = 'rgba(212,175,55,0.6)'; ctx.lineWidth = 2;
+  ctx.strokeRect(px+0.5, py+0.5, panelW-1, panelH-1);
+  ctx.strokeStyle = 'rgba(212,175,55,0.2)'; ctx.lineWidth = 1;
+  ctx.strokeRect(px+7, py+7, panelW-14, panelH-14);
 
-  const panelW = Math.min(420, W - 40);
-  const panelH = 390;
-  const px = (W - panelW) / 2;
-  const py = (H - panelH) / 2;
-
-  ctx.fillStyle = 'rgba(20,15,10,0.96)';
-  ctx.fillRect(px, py, panelW, panelH);
-  ctx.strokeStyle = 'rgba(212,175,55,0.6)';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(px + 0.5, py + 0.5, panelW - 1, panelH - 1);
-  ctx.strokeStyle = 'rgba(212,175,55,0.2)';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(px + 7, py + 7, panelW - 14, panelH - 14);
-
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.font = 'bold 22px "Courier New", monospace';
   ctx.fillStyle = 'rgba(212,175,55,0.95)';
-  ctx.fillText('杂 货 铺', px + panelW / 2, py + 30);
+  ctx.fillText('杂 货 铺', px+panelW/2, py+30);
 
   ctx.font = 'bold 13px "Courier New", monospace';
   ctx.fillStyle = 'rgba(255,220,140,0.85)';
-  ctx.fillText('$ ' + money, px + panelW / 2, py + 54);
+  ctx.fillText('$ '+money, px+panelW/2, py+54);
 
-  ctx.fillStyle = 'rgba(0,0,0,0.5)';
-  ctx.fillRect(px + panelW - 46, py + 10, 36, 32);
-  ctx.strokeStyle = 'rgba(212,175,55,0.4)';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(px + panelW - 46 + 0.5, py + 10.5, 35, 31);
+  ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(px+panelW-46, py+10, 36, 32);
+  ctx.strokeStyle = 'rgba(212,175,55,0.4)'; ctx.lineWidth = 1;
+  ctx.strokeRect(px+panelW-46+0.5, py+10.5, 35, 31);
   ctx.fillStyle = 'rgba(212,175,55,0.9)';
   ctx.font = 'bold 16px "Courier New", monospace';
-  ctx.fillText('✕', px + panelW - 28, py + 26);
+  ctx.fillText('✕', px+panelW-28, py+26);
 
   const itemH = 58;
   const items = [
-    { label: '补充弹药 15发', price: 20, can: money >= 20 },
-    { label: '草药酒 +30', price: 15, can: money >= 15 },
-    { label: '雇佣黑人兄弟', price: 50, can: money >= 50 && allies.length < MAX_ALLIES },
-    { label: '派遣兄弟 → 棉花农场', price: 0, can: allies.length > 0 },
-    { label: '派遣兄弟 → 金矿矿洞', price: 0, can: allies.length > 0 },
+    { label:'补充弹药 15发', price:20, can: money >= 20 },
+    { label:'草药酒 +30', price:15, can: money >= 15 },
+    { label:'雇佣'+mode.allyLabel, price:ALLY_PRICE, can: money >= ALLY_PRICE && allies.length < MAX_ALLIES },
+    { label:'派遣 → '+mode.subMaps.farm.name, price:0, can: allies.length > 0 },
+    { label:'派遣 → '+mode.subMaps.mine.name, price:0, can: allies.length > 0 },
+    { label:'返回模式选择', price:-1, can: true }
   ];
-  const startY = py + 70;
-  for (let i = 0; i < items.length; i++) {
+  const startY = py+70;
+  for (let i=0;i<items.length;i++) {
     const it = items[i];
-    const iy = startY + i * (itemH + 8);
+    const iy = startY + i*(itemH+8);
     ctx.fillStyle = it.can ? 'rgba(212,175,55,0.10)' : 'rgba(0,0,0,0.3)';
-    ctx.fillRect(px + 24, iy, panelW - 48, itemH);
+    ctx.fillRect(px+24, iy, panelW-48, itemH);
     ctx.strokeStyle = it.can ? 'rgba(212,175,55,0.4)' : 'rgba(212,175,55,0.15)';
     ctx.lineWidth = 1;
-    ctx.strokeRect(px + 24 + 0.5, iy + 0.5, panelW - 49, itemH - 1);
+    ctx.strokeRect(px+24+0.5, iy+0.5, panelW-49, itemH-1);
 
     ctx.textAlign = 'left';
     ctx.font = 'bold 15px "Courier New", monospace';
     ctx.fillStyle = it.can ? 'rgba(255,230,180,0.98)' : 'rgba(180,170,150,0.4)';
-    ctx.fillText(it.label, px + 40, iy + itemH / 2 + 1);
+    ctx.fillText(it.label, px+40, iy+itemH/2+1);
 
     ctx.textAlign = 'right';
     if (it.price > 0) {
       ctx.fillStyle = it.can ? 'rgba(255,220,120,0.95)' : 'rgba(180,170,150,0.4)';
-      ctx.fillText('$' + it.price, px + panelW - 40, iy + itemH / 2 + 1);
-    } else {
+      ctx.fillText('$'+it.price, px+panelW-40, iy+itemH/2+1);
+    } else if (it.price === 0) {
       ctx.fillStyle = it.can ? 'rgba(120,220,140,0.9)' : 'rgba(180,170,150,0.4)';
-      ctx.fillText(it.can ? '免费' : '无兄弟', px + panelW - 40, iy + itemH / 2 + 1);
+      ctx.fillText(it.can ? '免费' : '无兄弟', px+panelW-40, iy+itemH/2+1);
+    } else {
+      ctx.fillStyle = 'rgba(212,175,55,0.8)';
+      ctx.fillText('← 返回', px+panelW-40, iy+itemH/2+1);
     }
   }
-
   ctx.restore();
 }
 
 /* ================= 摇杆绘制 ================= */
 function drawStick(s, rgb, label) {
   if (!s.active) return;
-
-  ctx.beginPath();
-  ctx.arc(s.baseX, s.baseY, STICK_RADIUS, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(' + rgb + ',0.06)';
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(' + rgb + ',0.28)';
-  ctx.lineWidth = 2;
-  ctx.stroke();
+  ctx.beginPath(); ctx.arc(s.baseX, s.baseY, STICK_RADIUS, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba('+rgb+',0.06)'; ctx.fill();
+  ctx.strokeStyle = 'rgba('+rgb+',0.28)'; ctx.lineWidth = 2; ctx.stroke();
 
   const hx = s.curX, hy = s.curY;
+  ctx.beginPath(); ctx.moveTo(s.baseX, s.baseY); ctx.lineTo(hx, hy);
+  ctx.strokeStyle = 'rgba('+rgb+',0.25)'; ctx.lineWidth = 3; ctx.stroke();
 
-  ctx.beginPath();
-  ctx.moveTo(s.baseX, s.baseY);
-  ctx.lineTo(hx, hy);
-  ctx.strokeStyle = 'rgba(' + rgb + ',0.25)';
-  ctx.lineWidth = 3;
-  ctx.stroke();
-
-  const headR = STICK_RADIUS * 0.38;
+  const headR = STICK_RADIUS*0.38;
   const grd = ctx.createRadialGradient(hx, hy, 0, hx, hy, headR);
-  grd.addColorStop(0, 'rgba(' + rgb + ',0.75)');
-  grd.addColorStop(1, 'rgba(' + rgb + ',0.35)');
-  ctx.beginPath();
-  ctx.arc(hx, hy, headR, 0, Math.PI * 2);
-  ctx.fillStyle = grd;
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(' + rgb + ',0.85)';
-  ctx.lineWidth = 2;
-  ctx.stroke();
+  grd.addColorStop(0, 'rgba('+rgb+',0.75)');
+  grd.addColorStop(1, 'rgba('+rgb+',0.35)');
+  ctx.beginPath(); ctx.arc(hx, hy, headR, 0, Math.PI*2);
+  ctx.fillStyle = grd; ctx.fill();
+  ctx.strokeStyle = 'rgba('+rgb+',0.85)'; ctx.lineWidth = 2; ctx.stroke();
 
-  ctx.fillStyle = 'rgba(' + rgb + ',0.4)';
+  ctx.fillStyle = 'rgba('+rgb+',0.4)';
   ctx.font = 'bold 11px "Courier New", monospace';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(label, s.baseX, s.baseY - STICK_RADIUS - 14);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(label, s.baseX, s.baseY-STICK_RADIUS-14);
 }
 
 function drawDashButton() {
-  const cd = clamp(1 - player.dashCd / player.dashMaxCd, 0, 1);
+  const cd = clamp(1 - player.dashCd/player.dashMaxCd, 0, 1);
   const r = dashBtn.r;
-
-  ctx.beginPath();
-  ctx.arc(dashBtn.x, dashBtn.y, r, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(0,0,0,0.38)';
-  ctx.fill();
-
+  ctx.beginPath(); ctx.arc(dashBtn.x, dashBtn.y, r, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(0,0,0,0.38)'; ctx.fill();
   if (cd < 1) {
-    ctx.beginPath();
-    ctx.moveTo(dashBtn.x, dashBtn.y);
-    ctx.arc(dashBtn.x, dashBtn.y, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * cd);
-    ctx.closePath();
-    ctx.fillStyle = 'rgba(212,175,55,0.15)';
-    ctx.fill();
+    ctx.beginPath(); ctx.moveTo(dashBtn.x, dashBtn.y);
+    ctx.arc(dashBtn.x, dashBtn.y, r, -Math.PI/2, -Math.PI/2 + Math.PI*2*cd);
+    ctx.closePath(); ctx.fillStyle = 'rgba(212,175,55,0.15)'; ctx.fill();
   }
-
-  ctx.beginPath();
-  ctx.arc(dashBtn.x, dashBtn.y, r, 0, Math.PI * 2);
+  ctx.beginPath(); ctx.arc(dashBtn.x, dashBtn.y, r, 0, Math.PI*2);
   ctx.strokeStyle = cd >= 1 ? 'rgba(212,175,55,0.85)' : 'rgba(212,175,55,0.3)';
-  ctx.lineWidth = 2.5;
-  ctx.stroke();
-
+  ctx.lineWidth = 2.5; ctx.stroke();
   ctx.fillStyle = cd >= 1 ? 'rgba(212,175,55,0.95)' : 'rgba(212,175,55,0.35)';
-  ctx.font = 'bold ' + Math.round(r * 0.55) + 'px "Courier New", monospace';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('冲', dashBtn.x, dashBtn.y + 1);
+  ctx.font = 'bold '+Math.round(r*0.55)+'px "Courier New", monospace';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('冲', dashBtn.x, dashBtn.y+1);
 }
 
 /* ================= 升级界面 ================= */
 function drawUpgradeUI() {
   const L = getUpgradeLayout();
   const { cx, cy, cw, ch, rects } = L;
+  ctx.fillStyle = 'rgba(20,15,10,0.95)'; ctx.fillRect(cx, cy, cw, ch);
+  ctx.strokeStyle = 'rgba(212,175,55,0.5)'; ctx.lineWidth = 2;
+  ctx.strokeRect(cx+0.5, cy+0.5, cw-1, ch-1);
+  ctx.strokeStyle = 'rgba(212,175,55,0.18)'; ctx.lineWidth = 1;
+  ctx.strokeRect(cx+7, cy+7, cw-14, ch-14);
 
-  ctx.fillStyle = 'rgba(20,15,10,0.95)';
-  ctx.fillRect(cx, cy, cw, ch);
-  ctx.strokeStyle = 'rgba(212,175,55,0.5)';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(cx + 0.5, cy + 0.5, cw - 1, ch - 1);
-  ctx.strokeStyle = 'rgba(212,175,55,0.18)';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(cx + 7, cy + 7, cw - 14, ch - 14);
-
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillStyle = 'rgba(212,175,55,0.95)';
-  const fs = Math.min(22, cw * 0.065);
-  ctx.font = 'bold ' + fs + 'px "Courier New", monospace';
-  ctx.fillText('选 择 强 化', cx + cw / 2, cy + 36);
-  ctx.font = 'bold ' + Math.max(10, fs * 0.5) + 'px "Courier New", monospace';
+  const fs = Math.min(22, cw*0.065);
+  ctx.font = 'bold '+fs+'px "Courier New", monospace';
+  ctx.fillText('选 择 强 化', cx+cw/2, cy+36);
+  ctx.font = 'bold '+Math.max(10, fs*0.5)+'px "Courier New", monospace';
   ctx.fillStyle = 'rgba(212,175,55,0.5)';
-  ctx.fillText(isTouchMode ? '点击选项' : '按 1 / 2 / 3 或点击选择', cx + cw / 2, cy + 62);
+  ctx.fillText(isTouchMode ? '点击选项' : '按 1 / 2 / 3 或点击选择', cx+cw/2, cy+62);
 
-  for (let i = 0; i < upgradeUI.choices.length; i++) {
+  for (let i=0;i<upgradeUI.choices.length;i++) {
     const up = upgradeUI.choices[i];
     const r = rects[i];
-
-    const hover = !isTouchMode &&
-      mouse.x > r.x && mouse.x < r.x + r.w &&
-      mouse.y > r.y && mouse.y < r.y + r.h;
-
+    const hover = !isTouchMode && mouse.x > r.x && mouse.x < r.x+r.w && mouse.y > r.y && mouse.y < r.y+r.h;
     ctx.fillStyle = hover ? 'rgba(212,175,55,0.12)' : 'rgba(255,255,255,0.035)';
     ctx.fillRect(r.x, r.y, r.w, r.h);
     ctx.strokeStyle = hover ? 'rgba(212,175,55,0.7)' : 'rgba(212,175,55,0.22)';
     ctx.lineWidth = hover ? 2 : 1;
-    ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
+    ctx.strokeRect(r.x+0.5, r.y+0.5, r.w-1, r.h-1);
 
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
-    const nameSize = Math.min(17, r.w * 0.075);
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    const nameSize = Math.min(17, r.w*0.075);
     ctx.fillStyle = 'rgba(212,175,55,0.95)';
-    ctx.font = 'bold ' + nameSize + 'px "Courier New", monospace';
-    ctx.fillText((i + 1) + '. ' + up.name, r.x + 14, r.y + r.h * 0.34);
-
-    const descSize = Math.min(14, r.w * 0.058);
+    ctx.font = 'bold '+nameSize+'px "Courier New", monospace';
+    ctx.fillText((i+1)+'. '+up.name, r.x+14, r.y+r.h*0.34);
+    const descSize = Math.min(14, r.w*0.058);
     ctx.fillStyle = 'rgba(230,220,200,0.7)';
-    ctx.font = descSize + 'px "Courier New", monospace';
-    ctx.fillText(up.desc, r.x + 14, r.y + r.h * 0.7);
+    ctx.font = descSize+'px "Courier New", monospace';
+    ctx.fillText(up.desc, r.x+14, r.y+r.h*0.7);
   }
 }
 
 /* ================= 小地图 ================= */
 function drawMinimap() {
-  const size = Math.min(120, W * 0.26);
-  const pad = 20;
-  const mx = W - size - pad;
-  const my = 70;
-
+  const size = Math.min(120, W*0.26);
+  const pad = 20, mx = W-size-pad, my = 70;
   ctx.save();
-  ctx.fillStyle = 'rgba(0,0,0,0.6)';
-  ctx.fillRect(mx, my, size, size);
-  ctx.strokeStyle = 'rgba(212,175,55,0.3)';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(mx + 0.5, my + 0.5, size - 1, size - 1);
+  ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(mx, my, size, size);
+  ctx.strokeStyle = 'rgba(212,175,55,0.3)'; ctx.lineWidth = 1;
+  ctx.strokeRect(mx+0.5, my+0.5, size-1, size-1);
 
-  const s = size / WORLD;
-
+  const s = size/WORLD;
   ctx.fillStyle = 'rgba(140,130,120,0.25)';
-  for (let i = 0; i < buildings.length; i++) {
+  for (let i=0;i<buildings.length;i++) {
     const b = buildings[i];
-    ctx.fillRect(mx + b.x * s, my + b.y * s, Math.max(1, b.w * s), Math.max(1, b.h * s));
+    ctx.fillRect(mx+b.x*s, my+b.y*s, Math.max(1, b.w*s), Math.max(1, b.h*s));
   }
-
-  for (let i = 0; i < pickups.length; i++) {
+  for (let i=0;i<pickups.length;i++) {
     const p = pickups[i];
     ctx.fillStyle = 'rgba(212,175,55,0.9)';
-    ctx.fillRect(mx + p.x * s - 1.5, my + p.y * s - 1.5, 3, 3);
+    ctx.fillRect(mx+p.x*s-1.5, my+p.y*s-1.5, 3, 3);
   }
-
-  for (let i = 0; i < enemies.length; i++) {
+  for (let i=0;i<enemies.length;i++) {
     const e = enemies[i];
     ctx.fillStyle = e.isElite ? 'rgba(212,175,55,0.95)' : 'rgba(230,70,60,0.9)';
     const sz = e.isElite ? 3.5 : 2.5;
-    ctx.fillRect(mx + e.x * s - sz / 2, my + e.y * s - sz / 2, sz, sz);
+    ctx.fillRect(mx+e.x*s-sz/2, my+e.y*s-sz/2, sz, sz);
   }
-
-  for (let i = 0; i < allies.length; i++) {
+  for (let i=0;i<allies.length;i++) {
     const a = allies[i];
     ctx.fillStyle = 'rgba(120,220,140,0.95)';
-    ctx.beginPath();
-    ctx.arc(mx + a.x * s, my + a.y * s, 2.2, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.beginPath(); ctx.arc(mx+a.x*s, my+a.y*s, 2.2, 0, Math.PI*2); ctx.fill();
   }
-
   ctx.fillStyle = 'rgba(130,220,255,1)';
-  ctx.beginPath();
-  ctx.arc(mx + player.x * s, my + player.y * s, 3, 0, Math.PI * 2);
-  ctx.fill();
-
+  ctx.beginPath(); ctx.arc(mx+player.x*s, my+player.y*s, 3, 0, Math.PI*2); ctx.fill();
   ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-  ctx.strokeRect(
-    mx + (cam.x - W / 2) * s,
-    my + (cam.y - H / 2) * s,
-    W * s, H * s
-  );
-
+  ctx.strokeRect(mx+(cam.x-W/2)*s, my+(cam.y-H/2)*s, W*s, H*s);
   ctx.restore();
 }
 
 /* ================= 渲染总入口 ================= */
 function render() {
-  if (currentMap === 'city') {
-    renderCity();
-  } else if (currentMap === 'farm') {
-    renderSubMap(farm, 'cotton');
-  } else if (currentMap === 'mine') {
-    renderSubMap(mine, 'gold');
-  }
-
+  if (screen === 'start') { renderStartScreen(); return; }
+  if (currentMap === 'city') renderCity();
+  else if (currentMap === 'farm') renderSubMap(farm, 'cotton');
+  else if (currentMap === 'mine') renderSubMap(mine, 'gold');
   drawGlobalUI();
-
-  if (shopOpen) {
-    drawShop();
-  }
+  if (shopOpen) drawShop();
 }
 
 /* ================= 初始化 ================= */
 function init() {
   genWorld();
 
-  enemies = [];
-  bullets = [];
-  particles = [];
-  pickups = [];
-  allies = [];
-  decals = [];
-  kills = 0;
-  combo = 0;
-  comboTimer = 0;
-  shake = 0;
-  hitFlash = 0;
-  time = 0;
-  gameOver = false;
-  respawnTimer = 0;
-  supplyTimer = 6;
-  pausedForUpgrade = false;
-  upgradeUI = null;
-  autoTarget = null;
-  autoTargetTimer = 0;
-  money = 100;
-  shopOpen = false;
-  transports = [];
+  enemies = []; bullets = []; particles = []; pickups = []; allies = []; decals = [];
+  kills = 0; combo = 0; comboTimer = 0;
+  shake = 0; hitFlash = 0; time = 0;
+  gameOver = false; respawnTimer = 0; supplyTimer = 6;
+  pausedForUpgrade = false; upgradeUI = null;
+  autoTarget = null; autoTargetTimer = 0;
+  money = 100; shopOpen = false; transports = [];
   currentMap = 'city';
 
-  level = 1;
-  xp = 0;
-  xpNext = 8;
+  level = 1; xp = 0; xpNext = 8;
 
-  player.x = WORLD / 2;
-  player.y = WORLD / 2;
+  player.x = WORLD/2; player.y = WORLD/2;
   player.vx = player.vy = 0;
   player.hp = player.maxHp = 100;
   player.ammo = player.mag = 30;
-  player.fireCd = 0;
-  player.reloadT = 0;
-  player.reloadTime = 1.15;
-  player.dashCd = 0;
-  player.dashMaxCd = 0.85;
-  player.dashTime = 0;
-  player.angle = 0;
-  player.bulletDmg = 14;
-  player.fireRate = 0.075;
-  player.moveSpeed = 330;
-  player.pickupRange = 28;
-  player.pierce = 0;
-  player.drones = [];
-  player.droneAngle = 0;
+  player.fireCd = 0; player.reloadT = 0; player.reloadTime = 1.15;
+  player.dashCd = 0; player.dashMaxCd = 0.85; player.dashTime = 0;
+  player.angle = 0; player.bulletDmg = 14; player.fireRate = 0.075;
+  player.moveSpeed = 330; player.pickupRange = 28; player.pierce = 0;
+  player.drones = []; player.droneAngle = 0;
+  player.name = mode.playerName;
 
-  cam.x = player.x;
-  cam.y = player.y;
+  cam.x = player.x; cam.y = player.y;
 
-  farm.warehouse = 0;
-  farm.allies = [];
-  farm.nodes = [];
+  farm.warehouse = 0; farm.allies = []; farm.nodes = [];
   farm.lastUpdate = performance.now();
+  farm.boostStacks = 0; farm.boostTimer = 0; farm.boostCooldown = 0; farm.whipFlash = 0;
   initSubMap(farm, 'cotton');
 
-  mine.warehouse = 0;
-  mine.allies = [];
-  mine.nodes = [];
+  mine.warehouse = 0; mine.allies = []; mine.nodes = [];
   mine.lastUpdate = performance.now();
+  mine.boostStacks = 0; mine.boostTimer = 0; mine.boostCooldown = 0; mine.whipFlash = 0;
   initSubMap(mine, 'gold');
 
   resetSticks();
 
-  addAlly(player.x + 46, player.y + 10);
+  addAlly(player.x+46, player.y+10);
 
-  for (let i = 0; i < 22; i++) spawnEnemy();
+  for (let i=0;i<22;i++) spawnEnemy();
 
   last = performance.now();
 }
@@ -2708,15 +2332,18 @@ function loop(t) {
   if (dt > 0.05) dt = 0.05;
   if (dt < 0) dt = 0;
 
-  update(dt);
-  render();
-
+  if (screen === 'start') {
+    renderStartScreen();
+  } else {
+    update(dt);
+    render();
+  }
   requestAnimationFrame(loop);
 }
 
 /* ================= 启动 ================= */
 resize();
-init();
+initAudio();
 requestAnimationFrame(loop);
 
 document.addEventListener('gesturestart', e => e.preventDefault());
