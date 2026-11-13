@@ -66,14 +66,14 @@ const MODES = {
     playerName: '老大', allyLabel: '黑人兄弟',
     allyNames: ['黑人兄弟·棉花田','黑人兄弟·铁匠','黑人兄弟·逃亡者','黑人兄弟·自由人','黑人兄弟·猎人','黑人兄弟·木匠','黑人兄弟·牧人'],
     diffMul: { hp: 0.7, dmg: 0.7 },
-    killMoney: { normal: 10, elite: 40 },
+    killMoney: { normal: 30, elite: 120 },
     allyConfig: { maxHp: 100, atk: 18, speed: 280 },
     allyHasGun: false,
     warTank: false,
-    allyPrice: 15,
-    warPrice: 2000,
-    warReward: 500,
-    startMoney: 300,
+    allyPrice: 45,
+    warPrice: 20000,
+    warReward: 2500,
+    startMoney: 900,
     workerCollectTime: 1.0,
     enemyTemplates: [
       { id:'slavecatcher', name:'奴隶捕手', color:'#4a3a2e', hp:30, speed:[100,150], fire:[0.9,1.8], dmg:8, range:600 },
@@ -83,17 +83,19 @@ const MODES = {
       { id:'gambler', name:'赌徒', color:'#5a2a4a', hp:25, speed:[160,220], fire:[1.0,1.8], dmg:6, range:480 }
     ],
     subMaps: {
-      farm: { name:'棉花农场', shortName:'农场', resourceName:'棉花', price:15, theme:'cotton', mapColor:'#1e3018' },
-      mine: { name:'金矿矿洞', shortName:'矿洞', resourceName:'金矿', price:30, theme:'goldmine', mapColor:'#18181c' }
+      farm: { name:'棉花农场', shortName:'农场', resourceName:'棉花', price:45, theme:'cotton', mapColor:'#1e3018' },
+      mine: { name:'金矿矿洞', shortName:'矿洞', resourceName:'金矿', price:90, theme:'goldmine', mapColor:'#18181c' }
     },
     boost: { type:'whip', name:'鞭打加速', boostPerStack:0.25, maxStacks:5, duration:12, hpCost:8, cost:0, cooldown:0, color:[200,40,20] },
     boss: {
-      name: '南方联邦将军',
+      name: '南方联邦将军 + 骑兵团',
       units: [
-        { name:'南方联邦将军', hp:2500, speed:80, dmg:18, range:700, color:'#8b1a1a', r:22, isMainBoss:true, count:1 }
+        { name:'南方联邦将军', hp:6000, speed:70, dmg:22, range:750, color:'#8b1a1a', r:24, isMainBoss:true, count:1, role:'main', fire:[1.2,1.8] },
+        { name:'联邦骑兵', hp:280, speed:180, dmg:12, range:420, color:'#6b4a3a', r:14, isMainBoss:false, count:12, role:'cavalry', fire:[1.0,1.6] },
+        { name:'联邦步兵', hp:200, speed:85, dmg:10, range:600, color:'#4a3a4a', r:13, isMainBoss:false, count:18, role:'infantry', fire:[1.3,2.0] }
       ]
     },
-    feature: '敌人虚弱 · 近战肉搏 · 战争仅 $2,000'
+    feature: '敌人虚弱 · 近战肉搏 · 战争 $20,000'
   },
   britain: {
     id: 'britain', chapter: 2, difficulty: '普通',
@@ -101,15 +103,15 @@ const MODES = {
     playerName: '工厂老板', allyLabel: '工人兄弟',
     allyNames: ['工人兄弟·纺织工','工人兄弟·机械师','工人兄弟·矿工','工人兄弟·码头工','工人兄弟·铁路工','工人兄弟·学徒','工人兄弟·工头'],
     diffMul: { hp: 1.0, dmg: 1.0 },
-    killMoney: { normal: 20, elite: 80 },
+    killMoney: { normal: 60, elite: 240 },
     allyConfig: { maxHp: 140, atk: 16, speed: 260 },
     allyHasGun: true,
     allyGunConfig: { range: 400, fireRate: 1.1, dmgMul: 0.75, bulletSpeed: 1000 },
     warTank: false,
-    allyPrice: 60,
-    warPrice: 15000,
-    warReward: 3000,
-    startMoney: 800,
+    allyPrice: 180,
+    warPrice: 150000,
+    warReward: 15000,
+    startMoney: 2400,
     workerCollectTime: 0.9,
     investment: { baseRate: 0.0020, perWorkerRate: 0.0004, withdrawRatio: 0.7 },
     enemyTemplates: [
@@ -120,17 +122,20 @@ const MODES = {
       { id:'thug', name:'街头暴徒', color:'#5a3a2a', hp:30, speed:[150,200], fire:[0.8,1.5], dmg:6, range:480 }
     ],
     subMaps: {
-      farm: { name:'工厂车间', shortName:'车间', resourceName:'布匹', price:40, theme:'factory', mapColor:'#25251a' },
-      mine: { name:'投资基地', shortName:'投资', resourceName:'股息', price:80, theme:'investment', mapColor:'#1c1c28' }
+      farm: { name:'工厂车间', shortName:'车间', resourceName:'布匹', price:120, theme:'factory', mapColor:'#25251a' },
+      mine: { name:'投资基地', shortName:'投资', resourceName:'股息', price:240, theme:'investment', mapColor:'#1c1c28' }
     },
-    boost: { type:'money', name:'加钱加班', boostPerStack:0.20, maxStacks:5, duration:10, hpCost:0, cost:50, cooldown:0, color:[212,175,55] },
+    boost: { type:'money', name:'加钱加班', boostPerStack:0.20, maxStacks:5, duration:10, hpCost:0, cost:150, cooldown:0, color:[212,175,55] },
     boss: {
       name: '反对劳动法政府军团',
       units: [
-        { name:'政府军', hp:100, speed:100, dmg:11, range:600, color:'#2a3a5a', r:13, isMainBoss:false, count:60 }
+        { name:'军团指挥官', hp:5000, speed:70, dmg:18, range:750, color:'#3a2a4a', r:22, isMainBoss:true, count:1, role:'main', fire:[1.3,1.9] },
+        { name:'皇家骑兵', hp:350, speed:170, dmg:14, range:450, color:'#2a3a5a', r:14, isMainBoss:false, count:18, role:'cavalry', fire:[1.0,1.6] },
+        { name:'政府军步兵', hp:200, speed:95, dmg:12, range:600, color:'#2a3a4a', r:13, isMainBoss:false, count:50, role:'infantry', fire:[1.3,2.0] },
+        { name:'机枪班', hp:280, speed:55, dmg:16, range:750, color:'#4a3a2a', r:14, isMainBoss:false, count:10, role:'mg', fire:[1.2,1.8] }
       ]
     },
-    feature: '工人持枪 · 投资复利 · 战争 $15,000'
+    feature: '工人持枪 · 军团方阵 · 战争 $150,000'
   },
   germany: {
     id: 'germany', chapter: 3, difficulty: '困难',
@@ -138,15 +143,15 @@ const MODES = {
     playerName: 'USSR 卧底', allyLabel: '反纳粹兄弟',
     allyNames: ['反纳粹兄弟·裁缝','反纳粹兄弟·铁匠','反纳粹兄弟·教师','反纳粹兄弟·印刷工','反纳粹兄弟·医生','反纳粹兄弟·面包师','反纳粹兄弟·学生'],
     diffMul: { hp: 1.4, dmg: 1.4 },
-    killMoney: { normal: 35, elite: 150 },
+    killMoney: { normal: 105, elite: 450 },
     allyConfig: { maxHp: 120, atk: 22, speed: 300 },
     allyHasGun: true,
     allyGunConfig: { range: 350, fireRate: 0.95, dmgMul: 0.65, bulletSpeed: 1100 },
     warTank: true,
-    allyPrice: 40,
-    warPrice: 80000,
-    warReward: 20000,
-    startMoney: 1500,
+    allyPrice: 120,
+    warPrice: 800000,
+    warReward: 100000,
+    startMoney: 4500,
     workerCollectTime: 0.7,
     enemyTemplates: [
       { id:'ss', name:'党卫军', color:'#1a1a1a', hp:55, speed:[80,120], fire:[1.0,1.9], dmg:10, range:620 },
@@ -156,18 +161,21 @@ const MODES = {
       { id:'officer', name:'纳粹军官', color:'#1a1a2a', hp:70, speed:[60,90], fire:[1.3,2.2], dmg:12, range:660 }
     ],
     subMaps: {
-      farm: { name:'战场捡遗物', shortName:'战场', resourceName:'遗物', price:200, theme:'battlefield', mapColor:'#2a2216' },
-      mine: { name:'偷纳粹金库', shortName:'金库', resourceName:'黄金', price:500, theme:'vault', mapColor:'#1a1610' }
+      farm: { name:'战场捡遗物', shortName:'战场', resourceName:'遗物', price:600, theme:'battlefield', mapColor:'#2a2216' },
+      mine: { name:'偷纳粹金库', shortName:'金库', resourceName:'黄金', price:1500, theme:'vault', mapColor:'#1a1610' }
     },
     boost: { type:'faith', name:'信仰支持', boostPerStack:0.30, maxStacks:4, duration:10, hpCost:0, cost:0, cooldown:1.5, color:[200,100,60] },
     boss: {
-      name: '希特勒 + 青年团',
+      name: '希特勒 + 闪击战军团',
       units: [
-        { name:'希特勒', hp:4000, speed:70, dmg:22, range:700, color:'#1a1a1a', r:24, isMainBoss:true, count:1 },
-        { name:'青年团', hp:60, speed:160, dmg:7, range:480, color:'#5a3a2a', r:11, isMainBoss:false, count:70, speedBoost:0.4 }
+        { name:'希特勒', hp:12000, speed:55, dmg:22, range:800, color:'#1a1a1a', r:26, isMainBoss:true, count:1, role:'main', fire:[1.5,2.0] },
+        { name:'党卫军近卫', hp:800, speed:65, dmg:15, range:600, color:'#0a0a0a', r:16, isMainBoss:false, count:12, role:'guard', fire:[1.5,2.2] },
+        { name:'装甲掷弹兵', hp:400, speed:115, dmg:12, range:550, color:'#3a3a2a', r:15, isMainBoss:false, count:25, role:'grenadier', fire:[1.5,2.2] },
+        { name:'机枪组', hp:380, speed:60, dmg:14, range:750, color:'#4a3a2a', r:14, isMainBoss:false, count:10, role:'mg', fire:[1.2,1.8] },
+        { name:'青年团', hp:80, speed:210, dmg:3, range:380, color:'#5a3a2a', r:10, isMainBoss:false, count:50, role:'blitz', fire:[1.5,2.0], regenerable:true, maxCount:90 }
       ]
     },
-    feature: '兄弟持枪 · 双人坦克 · 战争 $80,000'
+    feature: '兄弟持枪 · 双人坦克 · 闪击战军团 $800,000'
   }
 };
 
@@ -189,6 +197,7 @@ let warBosses = [];
 let reviveQueue = [];
 let maxAlliesWar = 120;
 let warSnapshot = null;
+let blitzRegenTimer = 0;
 
 const STICK_RADIUS = Math.min(64, Math.min(window.innerWidth, window.innerHeight) * 0.14);
 const moveStick = { active:false, id:null, baseX:0, baseY:0, curX:0, curY:0, dx:0, dy:0 };
@@ -656,8 +665,8 @@ function switchMap(target) {
   else if (target === 'city') { cam.x = player.x; cam.y = player.y; }
 }
 
-function buyBullets() { if (money < 20) return; money -= 20; player.mag += 15; player.ammo = player.mag; sfxCash(); }
-function buyHealth() { if (money < 15) return; money -= 15; player.hp = Math.min(player.maxHp, player.hp+30); sfxCash(); }
+function buyBullets() { if (money < 60) return; money -= 60; player.mag += 15; player.ammo = player.mag; sfxCash(); }
+function buyHealth() { if (money < 45) return; money -= 45; player.hp = Math.min(player.maxHp, player.hp+30); sfxCash(); }
 function buyAlly() {
   if (money < mode.allyPrice) return;
   const limit = warActive ? maxAlliesWar : MAX_ALLIES;
@@ -863,6 +872,7 @@ function startWar() {
   warActive = true;
   warBosses = [];
   reviveQueue = [];
+  blitzRegenTimer = 2.0;
 
   const limit = maxAlliesWar;
   for (let i=0;i<recallCount;i++) {
@@ -888,6 +898,30 @@ function startWar() {
   }
 }
 
+function makeBossUnit(u, x, y) {
+  const hpMul = mode.diffMul.hp;
+  const dmgMul = mode.diffMul.dmg;
+  const speedBoost = u.speedBoost || 0;
+  const fire = u.fire || [0.8, 1.6];
+
+  return {
+    x, y, r: u.r || 14,
+    hp: u.hp * hpMul, maxHp: u.hp * hpMul,
+    angle: 0,
+    fireCd: rand(fire[0], fire[1]),
+    seeTimer: 0, canSee: true, alert: 99,
+    wanderT: 0, wx: 0, wy: 0, hurt: 0,
+    speed: u.speed * (1 + speedBoost),
+    template: { name:u.name, color:u.color, dmg:u.dmg*dmgMul, range:u.range, fire: fire, speed:[u.speed,u.speed] },
+    isElite: false,
+    isBoss: true,
+    isMainBoss: !!u.isMainBoss,
+    name: u.name,
+    role: u.role || 'infantry',
+    essential: !u.regenerable
+  };
+}
+
 function spawnBosses() {
   const boss = mode.boss;
   let unitsList = [];
@@ -895,34 +929,104 @@ function spawnBosses() {
     for (let i=0;i<u.count;i++) unitsList.push(u);
   }
   const centerX = WORLD/2, centerY = WORLD/2;
-  const n = unitsList.length;
-  const radius = n === 1 ? 0 : Math.min(500, 180 + n*3);
 
-  for (let i=0;i<n;i++) {
-    const u = unitsList[i];
-    const ang = (i/n) * Math.PI * 2;
-    const x = centerX + Math.cos(ang) * radius + rand(-30,30);
-    const y = centerY + Math.sin(ang) * radius + rand(-30,30);
+  const ringMap = {
+    main: 0, guard: 90, grenadier: 220, cavalry: 280, mg: 340, infantry: 300, blitz: 380
+  };
 
-    const hpMul = mode.diffMul.hp;
-    const dmgMul = mode.diffMul.dmg;
-    const speedBoost = u.speedBoost || 0;
+  const groups = {};
+  for (const u of unitsList) {
+    const role = u.role || 'infantry';
+    if (!groups[role]) groups[role] = [];
+    groups[role].push(u);
+  }
 
-    const e = {
-      x, y, r: u.r || 14,
-      hp: u.hp * hpMul, maxHp: u.hp * hpMul,
-      angle: 0,
-      fireCd: rand(0.5, 1.5),
-      seeTimer: 0, canSee: true, alert: 99,
-      wanderT: 0, wx: 0, wy: 0, hurt: 0,
-      speed: u.speed * (1 + speedBoost),
-      template: { name:u.name, color:u.color, dmg:u.dmg*dmgMul, range:u.range, fire:[0.8,1.6], speed:[u.speed,u.speed] },
-      isElite: false,
-      isBoss: true,
-      isMainBoss: !!u.isMainBoss,
-      name: u.name
-    };
-    warBosses.push(e);
+  for (const role in groups) {
+    const arr = groups[role];
+    const radius = ringMap[role] || 200;
+    for (let i=0;i<arr.length;i++) {
+      const u = arr[i];
+      const ang = (i/arr.length) * Math.PI * 2 + rand(-0.15, 0.15);
+      const x = centerX + Math.cos(ang) * radius + rand(-20,20);
+      const y = centerY + Math.sin(ang) * radius + rand(-20,20);
+      warBosses.push(makeBossUnit(u, x, y));
+    }
+  }
+}
+
+function spawnBlitzReinforcements() {
+  const mainBoss = warBosses.find(b => b.isMainBoss && !b.dead);
+  if (!mainBoss) return;
+
+  const regenUnit = mode.boss.units.find(u => u.regenerable);
+  if (!regenUnit) return;
+
+  const currentCount = warBosses.filter(b => b.role === regenUnit.role && !b.dead).length;
+  const maxCount = regenUnit.maxCount || regenUnit.count;
+  if (currentCount >= maxCount) return;
+
+  const toSpawn = Math.min(2, maxCount - currentCount);
+  for (let i=0;i<toSpawn;i++) {
+    const ang = rand(0, Math.PI*2);
+    const dd = rand(80, 200);
+    const x = mainBoss.x + Math.cos(ang) * dd;
+    const y = mainBoss.y + Math.sin(ang) * dd;
+    warBosses.push(makeBossUnit(regenUnit, x, y));
+    for (let k=0;k<10;k++) spawnParticle(x, y, rand(0,Math.PI*2), rand(40,200), '255,180,60', rand(0.2,0.5), rand(2,4));
+  }
+}
+
+/* Boss 专用 AI - 不做视线检测，更快的战斗节奏 */
+function updateBossUnit(e, dt) {
+  if (e.dead) return;
+  e.hurt -= dt;
+  if (e.hurt < 0) e.hurt = 0;
+
+  const d = dist(e.x, e.y, player.x, player.y);
+  e.angle = Math.atan2(player.y - e.y, player.x - e.x);
+
+  // 冲锋速度波动（青年团闪击感觉）
+  let spd = e.speed;
+  if (e.role === 'blitz') {
+    spd *= 1 + Math.sin(time*3 + e.x*0.01) * 0.15;
+  }
+
+  // 不同角色的目标距离
+  let preferred = 300;
+  if (e.role === 'blitz') preferred = 120;
+  else if (e.role === 'guard') preferred = 200;
+  else if (e.role === 'mg') preferred = 500;
+  else if (e.role === 'cavalry') preferred = 150;
+  else if (e.role === 'grenadier') preferred = 250;
+  else if (e.role === 'main') preferred = 350;
+
+  let mvx = 0, mvy = 0;
+  if (d > preferred + 30) {
+    mvx = Math.cos(e.angle);
+    mvy = Math.sin(e.angle);
+  } else if (d < preferred - 30) {
+    mvx = -Math.cos(e.angle) * 0.5;
+    mvy = -Math.sin(e.angle) * 0.5;
+  }
+
+  // 侧向游走
+  const s = Math.sin(time * 2 + e.x * 0.01);
+  mvx += -Math.sin(e.angle) * 0.3 * s;
+  mvy += Math.cos(e.angle) * 0.3 * s;
+
+  const ml = Math.hypot(mvx, mvy);
+  if (ml > 0.01) { mvx /= ml; mvy /= ml; }
+
+  e.x += mvx * spd * dt;
+  e.y += mvy * spd * dt;
+  pushOut(e, e.r);
+
+  // 射击
+  e.fireCd -= dt;
+  if (e.fireCd <= 0 && d < e.template.range && !gameOver) {
+    const fr = e.template.fire || [1.2, 1.8];
+    e.fireCd = rand(fr[0], fr[1]);
+    enemyShootAt(e, player.x, player.y);
   }
 }
 
@@ -995,7 +1099,9 @@ function rollbackWar() {
 
 function checkWarClear() {
   if (!warActive || warCleared) return;
-  if (warBosses.every(b => b.dead)) {
+  // 只检查 essential（非可再生）Boss
+  const essentialAlive = warBosses.filter(b => !b.dead && b.essential);
+  if (essentialAlive.length === 0) {
     warCleared = true;
     warClearTimer = 3.0;
     shake = 20;
@@ -1059,7 +1165,7 @@ function handleClick(x, y) {
   }
 
   if (currentMap === 'city' && !warActive && !gameOver) {
-    const warBtnW = 140, warBtnH = 34;
+    const warBtnW = 160, warBtnH = 34;
     const warBtnX = W - 240 - warBtnW;
     if (x > warBtnX && x < warBtnX+warBtnW && y > topY && y < topY+warBtnH) {
       if (money >= mode.warPrice) startWar();
@@ -1369,12 +1475,15 @@ function updateAlly(a, dt) {
   if (target) {
     a.angle = Math.atan2(target.y-a.y, target.x-a.x);
     const reach = a.r + target.r + 6;
+
     if (a.hasGun && a.gunRange > 0 && nd < a.gunRange && nd > 35 && a.fireCd <= 0) {
       a.fireCd = mode.allyGunConfig.fireRate;
       allyShoot(a, target);
     }
-    if (nd > reach) { tx = target.x; ty = target.y; }
-    else if (a.attackCd <= 0 && nd > 35) {
+
+    if (nd > reach) {
+      tx = target.x; ty = target.y;
+    } else if (a.attackCd <= 0) {
       a.attackCd = 0.55; a.punchT = 0.12;
       const len = nd || 1;
       damageEnemy(target, a.atk, (target.x-a.x)/len, (target.y-a.y)/len);
@@ -1698,7 +1807,20 @@ function updateCity(dt) {
   updateReviveQueue(dt);
 
   for (const e of enemies) updateEnemy(e, dt);
-  for (const b of warBosses) if (!b.dead) updateEnemy(b, dt);
+  // Boss 使用专用 AI
+  for (const b of warBosses) if (!b.dead) updateBossUnit(b, dt);
+
+  // 闪击战青年团持续刷新
+  if (warActive && !warCleared) {
+    const hasRegen = mode.boss.units.some(u => u.regenerable);
+    if (hasRegen) {
+      blitzRegenTimer -= dt;
+      if (blitzRegenTimer <= 0) {
+        blitzRegenTimer = 2.0;
+        spawnBlitzReinforcements();
+      }
+    }
+  }
 
   for (let i=0;i<enemies.length;i++) for (let j=i+1;j<enemies.length;j++) {
     const a = enemies[i], b = enemies[j];
@@ -2029,51 +2151,80 @@ function drawEnemy(e) {
   drawNameLabel(label, e.x, e.y-e.r-(e.hp<e.maxHp?18:14), e.isElite?'rgba(255,220,120,0.95)':'rgba(215,200,190,0.78)', e.isElite?11:9.5);
 }
 
-/* ================= Boss 特色外观 ================= */
+/* Boss 绘制 - 按名字匹配特色外观 */
 function drawBoss(b) {
-  const pulse = 1 + Math.sin(time*3 + b.x)*0.1;
   const isMain = b.isMainBoss;
-  const color = isMain ? 'rgba(255,80,60,' : 'rgba(255,140,80,';
+  const isBlitz = b.role === 'blitz';
 
-  // 地面光环
-  ctx.strokeStyle = color + (0.4 + Math.sin(time*4)*0.2).toFixed(2) + ')';
-  ctx.lineWidth = isMain ? 4 : 2;
-  ctx.beginPath(); ctx.arc(b.x, b.y, b.r*2.2*pulse, 0, Math.PI*2); ctx.stroke();
+  // 光环：主Boss大，青年团小
+  if (isMain) {
+    const pulse = 1 + Math.sin(time*3 + b.x)*0.1;
+    ctx.strokeStyle = 'rgba(255,80,60,' + (0.4 + Math.sin(time*4)*0.2).toFixed(2) + ')';
+    ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.arc(b.x, b.y, b.r*2.2*pulse, 0, Math.PI*2); ctx.stroke();
+  } else if (isBlitz) {
+    // 青年团:红色小脉冲，表现冲锋
+    const pulse = 0.5 + Math.sin(time*8 + b.x)*0.5;
+    ctx.strokeStyle = 'rgba(255,120,60,' + (0.2 + pulse*0.3).toFixed(2) + ')';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(b.x, b.y, b.r*1.5, 0, Math.PI*2); ctx.stroke();
+  }
 
-  // 阴影
   ctx.fillStyle = 'rgba(0,0,0,0.55)';
-  ctx.beginPath(); ctx.ellipse(b.x+4, b.y+6, b.r*1.1, b.r*0.85, 0, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(b.x+3, b.y+5, b.r*1.05, b.r*0.8, 0, 0, Math.PI*2); ctx.fill();
 
   if (b.name === '南方联邦将军') {
     drawConfederateGeneral(b);
+  } else if (b.name === '联邦骑兵') {
+    drawCavalry(b, '#6b4a3a');
+  } else if (b.name === '联邦步兵') {
+    drawBossSoldier(b, '#4a3a4a', false);
+  } else if (b.name === '军团指挥官') {
+    drawCommander(b);
+  } else if (b.name === '皇家骑兵') {
+    drawCavalry(b, '#2a3a5a');
+  } else if (b.name === '政府军步兵') {
+    drawBossSoldier(b, '#2a3a4a', false);
+  } else if (b.name === '机枪班') {
+    drawMGSoldier(b);
   } else if (b.name === '希特勒') {
     drawHitler(b);
   } else if (b.name === '青年团') {
     drawHitlerYouth(b);
+  } else if (b.name === '党卫军近卫') {
+    drawSSGuard(b);
+  } else if (b.name === '装甲掷弹兵') {
+    drawGrenadier(b);
+  } else if (b.name === '机枪组') {
+    drawMGSoldier(b);
   } else {
-    // 政府军 或 其他一般士兵
-    drawGenericBossSoldier(b, isMain);
+    drawBossSoldier(b, b.template.color, isMain);
   }
 
   // 血条
-  const bw = isMain ? 90 : 32;
-  ctx.fillStyle = 'rgba(0,0,0,0.7)';
-  ctx.fillRect(b.x-bw/2, b.y-b.r-16, bw, isMain ? 6 : 4);
-  ctx.fillStyle = isMain ? '#ff5030' : '#ff8040';
-  ctx.fillRect(b.x-bw/2, b.y-b.r-16, bw*(b.hp/b.maxHp), isMain ? 6 : 4);
+  if (isMain || b.hp < b.maxHp) {
+    const bw = isMain ? 90 : 28;
+    const bh = isMain ? 6 : 3.5;
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(b.x-bw/2, b.y-b.r-16, bw, bh);
+    ctx.fillStyle = isMain ? '#ff5030' : (b.role === 'blitz' ? '#ff8040' : '#c08040');
+    ctx.fillRect(b.x-bw/2, b.y-b.r-16, bw*(b.hp/b.maxHp), bh);
+  }
 
-  // 名字
-  drawNameLabel('☠ '+b.name, b.x, b.y-b.r-(isMain?24:18),
-    isMain?'rgba(255,220,120,1)':'rgba(255,180,140,0.9)', isMain?12:9.5);
+  // 名字（只有主Boss显示）
+  if (isMain) {
+    drawNameLabel('☠ '+b.name, b.x, b.y-b.r-24, 'rgba(255,220,120,1)', 12);
+  }
 }
 
-// 南方联邦将军：灰蓝军帽、八字胡、金肩章
+/* ====== Boss 绘制函数 ====== */
+
 function drawConfederateGeneral(b) {
   const t = time*2;
   ctx.save();
   ctx.translate(b.x, b.y);
 
-  // 披风（背后飘动）
+  // 披风
   ctx.fillStyle = 'rgba(120,20,20,0.7)';
   ctx.beginPath();
   ctx.moveTo(-b.r*0.7, -b.r*0.3);
@@ -2086,7 +2237,7 @@ function drawConfederateGeneral(b) {
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  // 身体（灰蓝色制服）
+  // 身体
   ctx.fillStyle = b.hurt > 0 ? '#ff6a5a' : '#5a5a6e';
   ctx.beginPath();
   ctx.arc(0, 0, b.r, 0, Math.PI*2);
@@ -2095,11 +2246,10 @@ function drawConfederateGeneral(b) {
   ctx.lineWidth = 2.5;
   ctx.stroke();
 
-  // 金色肩章
+  // 金肩章
   ctx.fillStyle = '#d4af37';
   ctx.beginPath(); ctx.ellipse(-b.r*0.75, -b.r*0.15, 5, 3.5, 0, 0, Math.PI*2); ctx.fill();
   ctx.beginPath(); ctx.ellipse(b.r*0.75, -b.r*0.15, 5, 3.5, 0, 0, Math.PI*2); ctx.fill();
-  // 肩章流苏
   ctx.strokeStyle = '#d4af37';
   ctx.lineWidth = 1;
   for (let i=-1;i<=1;i++) {
@@ -2113,21 +2263,11 @@ function drawConfederateGeneral(b) {
     ctx.stroke();
   }
 
-  // 胸口纽扣
-  ctx.fillStyle = '#d4af37';
-  for (let i=0;i<3;i++) {
-    ctx.beginPath();
-    ctx.arc(0, -b.r*0.1 + i*4, 1.5, 0, Math.PI*2);
-    ctx.fill();
-  }
-
   // 军帽
-  // 帽檐
   ctx.fillStyle = '#1a1a1a';
   ctx.beginPath();
   ctx.ellipse(0, -b.r*0.75, b.r*0.85, b.r*0.22, 0, 0, Math.PI*2);
   ctx.fill();
-  // 帽身
   ctx.fillStyle = '#5a5a6e';
   ctx.beginPath();
   ctx.ellipse(0, -b.r*0.95, b.r*0.65, b.r*0.4, 0, Math.PI, 0);
@@ -2135,16 +2275,12 @@ function drawConfederateGeneral(b) {
   ctx.strokeStyle = '#1a1a2a';
   ctx.lineWidth = 1.5;
   ctx.stroke();
-  // 帽徽（金色）
   ctx.fillStyle = '#d4af37';
   ctx.beginPath();
   ctx.arc(0, -b.r*0.95, 3, 0, Math.PI*2);
   ctx.fill();
-  // 帽徽上的小星星
-  ctx.fillStyle = '#fff0c0';
-  ctx.beginPath(); ctx.arc(0, -b.r*0.95, 1, 0, Math.PI*2); ctx.fill();
 
-  // 眼睛（锐利）
+  // 眼睛
   ctx.fillStyle = '#fff';
   ctx.beginPath(); ctx.ellipse(-4, -b.r*0.35, 2.5, 1.8, 0, 0, Math.PI*2); ctx.fill();
   ctx.beginPath(); ctx.ellipse(4, -b.r*0.35, 2.5, 1.8, 0, 0, Math.PI*2); ctx.fill();
@@ -2171,21 +2307,14 @@ function drawConfederateGeneral(b) {
   ctx.moveTo(Math.cos(ang)*b.r*0.6, Math.sin(ang)*b.r*0.6);
   ctx.lineTo(Math.cos(ang)*b.r*1.9, Math.sin(ang)*b.r*1.9);
   ctx.stroke();
-  ctx.fillStyle = '#4a4a52';
-  ctx.beginPath();
-  ctx.arc(Math.cos(ang)*b.r*1.9, Math.sin(ang)*b.r*1.9, 3, 0, Math.PI*2);
-  ctx.fill();
 
   ctx.restore();
 }
 
-// 希特勒：斜刘海、方短胡、纳粹袖标
 function drawHitler(b) {
-  const t = time*2;
   ctx.save();
   ctx.translate(b.x, b.y);
 
-  // 身体（灰绿色军装）
   ctx.fillStyle = b.hurt > 0 ? '#ff6a5a' : '#4a4a3a';
   ctx.beginPath();
   ctx.arc(0, 0, b.r, 0, Math.PI*2);
@@ -2194,7 +2323,7 @@ function drawHitler(b) {
   ctx.lineWidth = 3;
   ctx.stroke();
 
-  // 军装领口
+  // 领口
   ctx.fillStyle = '#2a2a1a';
   ctx.beginPath();
   ctx.moveTo(-b.r*0.4, -b.r*0.5);
@@ -2205,7 +2334,7 @@ function drawHitler(b) {
   ctx.closePath();
   ctx.fill();
 
-  // 铁十字勋章（左胸）
+  // 铁十字勋章
   ctx.fillStyle = '#2a2a2a';
   ctx.beginPath();
   ctx.arc(-b.r*0.45, b.r*0.15, 4.5, 0, Math.PI*2);
@@ -2221,7 +2350,7 @@ function drawHitler(b) {
   ctx.lineTo(-b.r*0.45, b.r*0.15 + 2.5);
   ctx.stroke();
 
-  // 纳粹红袖标（左臂，也就是画面右侧）
+  // 袖标
   ctx.fillStyle = '#aa2020';
   ctx.beginPath();
   ctx.ellipse(b.r*0.75, b.r*0.25, 5, 9, 0.3, 0, Math.PI*2);
@@ -2230,25 +2359,23 @@ function drawHitler(b) {
   ctx.beginPath();
   ctx.arc(b.r*0.75, b.r*0.25, 3.5, 0, Math.PI*2);
   ctx.fill();
-  // 袖标里的黑色符号（简化卐字，用一个黑方块代替）
   ctx.fillStyle = '#1a1a1a';
-  ctx.fillRect(b.r*0.75-2, b.r*0.25-2, 4, 4);
+  ctx.fillRect(b.r*0.75-1.5, b.r*0.25-4, 3, 8);
+  ctx.fillRect(b.r*0.75-4, b.r*0.25-1.5, 8, 3);
 
-  // 头部
-  // 头皮/头发底色
+  // 头发
   ctx.fillStyle = '#3a2a1a';
   ctx.beginPath();
   ctx.arc(0, -b.r*0.45, b.r*0.72, 0, Math.PI*2);
   ctx.fill();
 
-  // 脸部（肤色）
+  // 脸
   ctx.fillStyle = '#e0b090';
   ctx.beginPath();
   ctx.arc(0, -b.r*0.4, b.r*0.6, 0, Math.PI*2);
   ctx.fill();
 
-  // ===== 标志性斜刘海 =====
-  // 左侧头发（从右上往左下斜）
+  // 斜刘海
   ctx.fillStyle = '#2a1a0a';
   ctx.beginPath();
   ctx.moveTo(-b.r*0.62, -b.r*0.55);
@@ -2258,37 +2385,25 @@ function drawHitler(b) {
   ctx.quadraticCurveTo(-b.r*0.3, -b.r*0.5, -b.r*0.62, -b.r*0.55);
   ctx.closePath();
   ctx.fill();
-  // 斜刘海尖端
   ctx.beginPath();
   ctx.moveTo(-b.r*0.62, -b.r*0.55);
   ctx.quadraticCurveTo(-b.r*0.4, -b.r*0.45, -b.r*0.3, -b.r*0.25);
   ctx.quadraticCurveTo(-b.r*0.4, -b.r*0.35, -b.r*0.62, -b.r*0.55);
   ctx.closePath();
   ctx.fill();
-  // 头发高光
-  ctx.strokeStyle = 'rgba(150,120,80,0.5)';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(-b.r*0.4, -b.r*0.85);
-  ctx.quadraticCurveTo(b.r*0.05, -b.r*0.88, b.r*0.4, -b.r*0.78);
-  ctx.stroke();
 
   // 耳朵
   ctx.fillStyle = '#d0a080';
   ctx.beginPath(); ctx.ellipse(-b.r*0.6, -b.r*0.38, 3, 4, 0, 0, Math.PI*2); ctx.fill();
   ctx.beginPath(); ctx.ellipse(b.r*0.6, -b.r*0.38, 3, 4, 0, 0, Math.PI*2); ctx.fill();
 
-  // 眼睛（锐利、略带阴鸷）
+  // 眼睛
   ctx.fillStyle = '#f0f0f0';
   ctx.beginPath(); ctx.ellipse(-b.r*0.22, -b.r*0.4, 2.5, 1.8, 0, 0, Math.PI*2); ctx.fill();
   ctx.beginPath(); ctx.ellipse(b.r*0.22, -b.r*0.4, 2.5, 1.8, 0, 0, Math.PI*2); ctx.fill();
   ctx.fillStyle = '#2a3a4a';
   ctx.beginPath(); ctx.arc(-b.r*0.22, -b.r*0.4, 1.3, 0, Math.PI*2); ctx.fill();
   ctx.beginPath(); ctx.arc(b.r*0.22, -b.r*0.4, 1.3, 0, Math.PI*2); ctx.fill();
-  // 眼窝阴影
-  ctx.fillStyle = 'rgba(0,0,0,0.2)';
-  ctx.beginPath(); ctx.ellipse(-b.r*0.22, -b.r*0.32, 3.5, 2, 0, 0, Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(b.r*0.22, -b.r*0.32, 3.5, 2, 0, 0, Math.PI*2); ctx.fill();
 
   // 鼻子
   ctx.fillStyle = '#c09878';
@@ -2299,24 +2414,9 @@ function drawHitler(b) {
   ctx.closePath();
   ctx.fill();
 
-  // ===== 标志性方短胡 =====
+  // 方短胡
   ctx.fillStyle = '#1a1208';
   ctx.fillRect(-b.r*0.2, -b.r*0.2, b.r*0.4, b.r*0.11);
-  // 胡须上缘微斜
-  ctx.beginPath();
-  ctx.moveTo(-b.r*0.2, -b.r*0.2);
-  ctx.lineTo(b.r*0.2, -b.r*0.2);
-  ctx.lineTo(b.r*0.18, -b.r*0.16);
-  ctx.lineTo(-b.r*0.18, -b.r*0.16);
-  ctx.closePath();
-  ctx.fill();
-
-  // 下巴轮廓
-  ctx.strokeStyle = 'rgba(0,0,0,0.15)';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.arc(0, -b.r*0.42, b.r*0.55, 0.3, Math.PI - 0.3);
-  ctx.stroke();
 
   // 枪
   const ang = b.angle;
@@ -2326,20 +2426,15 @@ function drawHitler(b) {
   ctx.moveTo(Math.cos(ang)*b.r*0.6, Math.sin(ang)*b.r*0.6);
   ctx.lineTo(Math.cos(ang)*b.r*1.9, Math.sin(ang)*b.r*1.9);
   ctx.stroke();
-  ctx.fillStyle = '#3a3a42';
-  ctx.beginPath();
-  ctx.arc(Math.cos(ang)*b.r*1.9, Math.sin(ang)*b.r*1.9, 3, 0, Math.PI*2);
-  ctx.fill();
 
   ctx.restore();
 }
 
-// 青年团：戴帽的少年兵，速度快但体型小
 function drawHitlerYouth(b) {
   ctx.save();
   ctx.translate(b.x, b.y);
 
-  // 身体（褐色制服，少年兵）
+  // 身体（褐色制服）
   ctx.fillStyle = b.hurt > 0 ? '#ff6a5a' : '#6a4a2a';
   ctx.beginPath();
   ctx.arc(0, 0, b.r, 0, Math.PI*2);
@@ -2348,11 +2443,7 @@ function drawHitlerYouth(b) {
   ctx.lineWidth = 2;
   ctx.stroke();
 
-  // 领口
-  ctx.fillStyle = '#3a2a1a';
-  ctx.fillRect(-b.r*0.3, -b.r*0.5, b.r*0.6, b.r*0.15);
-
-  // 黑色领巾
+  // 黑领巾
   ctx.fillStyle = '#1a1a1a';
   ctx.beginPath();
   ctx.moveTo(-b.r*0.25, -b.r*0.35);
@@ -2362,28 +2453,26 @@ function drawHitlerYouth(b) {
   ctx.closePath();
   ctx.fill();
 
-  // 头部（少年脸，肤色）
+  // 脸
   ctx.fillStyle = '#e8c0a0';
   ctx.beginPath();
   ctx.arc(0, -b.r*0.35, b.r*0.55, 0, Math.PI*2);
   ctx.fill();
 
-  // 眼
+  // 眼睛
   ctx.fillStyle = '#1a1a1a';
   ctx.beginPath(); ctx.arc(-b.r*0.18, -b.r*0.38, 1.3, 0, Math.PI*2); ctx.fill();
   ctx.beginPath(); ctx.arc(b.r*0.18, -b.r*0.38, 1.3, 0, Math.PI*2); ctx.fill();
 
-  // 少年帽（棕色小帽，帽檐向前）
+  // 帽子
   ctx.fillStyle = '#3a2a1a';
   ctx.beginPath();
   ctx.arc(0, -b.r*0.55, b.r*0.62, Math.PI, 0);
   ctx.fill();
-  // 帽檐
   ctx.fillStyle = '#2a1a0a';
   ctx.beginPath();
   ctx.ellipse(0, -b.r*0.55, b.r*0.7, b.r*0.15, 0, 0, Math.PI*2);
   ctx.fill();
-  // 帽徽
   ctx.fillStyle = '#aa2020';
   ctx.beginPath();
   ctx.arc(0, -b.r*0.72, 2.5, 0, Math.PI*2);
@@ -2401,17 +2490,216 @@ function drawHitlerYouth(b) {
   ctx.restore();
 }
 
-// 政府军 / 通用士兵
-function drawGenericBossSoldier(b, isMain) {
+function drawSSGuard(b) {
   ctx.save();
   ctx.translate(b.x, b.y);
 
-  // 身体
-  ctx.fillStyle = b.hurt > 0 ? '#ff6a5a' : b.template.color;
+  ctx.fillStyle = b.hurt > 0 ? '#ff6a5a' : '#0a0a0a';
   ctx.beginPath();
   ctx.arc(0, 0, b.r, 0, Math.PI*2);
   ctx.fill();
-  ctx.strokeStyle = isMain ? '#ff5030' : 'rgba(255,140,80,0.9)';
+  ctx.strokeStyle = '#ff3030';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // 骷髅帽徽
+  ctx.fillStyle = '#e0e0e0';
+  ctx.beginPath(); ctx.arc(0, -b.r*0.5, 4, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#1a1a1a';
+  ctx.beginPath(); ctx.arc(-1.2, -b.r*0.5, 0.8, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(1.2, -b.r*0.5, 0.8, 0, Math.PI*2); ctx.fill();
+  ctx.fillRect(-2, -b.r*0.45, 4, 1.5);
+
+  // 眼睛
+  ctx.fillStyle = '#ff4040';
+  ctx.beginPath(); ctx.arc(-b.r*0.25, -b.r*0.15, 1.8, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(b.r*0.25, -b.r*0.15, 1.8, 0, Math.PI*2); ctx.fill();
+
+  // 冲锋枪
+  const ang = b.angle;
+  ctx.strokeStyle = '#1a1a1a';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(Math.cos(ang)*b.r*0.5, Math.sin(ang)*b.r*0.5);
+  ctx.lineTo(Math.cos(ang)*b.r*1.7, Math.sin(ang)*b.r*1.7);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawGrenadier(b) {
+  ctx.save();
+  ctx.translate(b.x, b.y);
+
+  ctx.fillStyle = b.hurt > 0 ? '#ff6a5a' : '#3a3a2a';
+  ctx.beginPath();
+  ctx.arc(0, 0, b.r, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = '#1a1a1a';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // 钢盔
+  ctx.fillStyle = '#2a2a1a';
+  ctx.beginPath();
+  ctx.arc(0, -b.r*0.2, b.r*0.75, Math.PI, 0);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(0, -b.r*0.2, b.r*0.8, b.r*0.15, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  // 眼睛
+  ctx.fillStyle = '#1a1a1a';
+  ctx.beginPath(); ctx.arc(-b.r*0.22, -b.r*0.05, 1.5, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(b.r*0.22, -b.r*0.05, 1.5, 0, Math.PI*2); ctx.fill();
+
+  // 长枪
+  const ang = b.angle;
+  ctx.strokeStyle = '#221a16';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(Math.cos(ang)*b.r*0.5, Math.sin(ang)*b.r*0.5);
+  ctx.lineTo(Math.cos(ang)*b.r*1.8, Math.sin(ang)*b.r*1.8);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawCavalry(b, horseColor) {
+  ctx.save();
+  ctx.translate(b.x, b.y);
+
+  // 马
+  const ang = b.angle;
+  ctx.save();
+  ctx.rotate(ang);
+  ctx.fillStyle = horseColor;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, b.r*1.3, b.r*0.6, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = '#1a1a1a';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  // 马头
+  ctx.beginPath();
+  ctx.ellipse(b.r*1.1, -b.r*0.15, b.r*0.5, b.r*0.35, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.stroke();
+  // 鬃毛
+  ctx.fillStyle = '#1a1a1a';
+  ctx.beginPath();
+  ctx.ellipse(0, -b.r*0.4, b.r*0.8, b.r*0.15, 0, 0, Math.PI*2);
+  ctx.fill();
+  // 腿
+  ctx.strokeStyle = horseColor;
+  ctx.lineWidth = 4;
+  for (let i=-1;i<=1;i+=2) {
+    ctx.beginPath();
+    ctx.moveTo(i*b.r*0.7, b.r*0.4);
+    ctx.lineTo(i*b.r*0.7, b.r*0.9);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(i*b.r*0.2, b.r*0.4);
+    ctx.lineTo(i*b.r*0.2, b.r*0.9);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // 骑手
+  ctx.fillStyle = b.hurt > 0 ? '#ff6a5a' : (b.name === '皇家骑兵' ? '#2a3a5a' : '#6b4a3a');
+  ctx.beginPath();
+  ctx.arc(0, -b.r*0.6, b.r*0.55, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = '#1a1a1a';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // 骑手头部
+  ctx.fillStyle = '#d0a080';
+  ctx.beginPath();
+  ctx.arc(0, -b.r*1.0, b.r*0.35, 0, Math.PI*2);
+  ctx.fill();
+
+  // 军帽
+  ctx.fillStyle = b.name === '皇家骑兵' ? '#1a2a4a' : '#3a2a1a';
+  ctx.beginPath();
+  ctx.arc(0, -b.r*1.1, b.r*0.4, Math.PI, 0);
+  ctx.fill();
+
+  // 军刀
+  ctx.strokeStyle = '#c0c0c0';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, -b.r*0.6);
+  ctx.lineTo(Math.cos(ang)*b.r*1.5, -b.r*0.3 + Math.sin(ang)*b.r*1.5);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawCommander(b) {
+  ctx.save();
+  ctx.translate(b.x, b.y);
+
+  ctx.fillStyle = b.hurt > 0 ? '#ff6a5a' : '#3a2a4a';
+  ctx.beginPath();
+  ctx.arc(0, 0, b.r, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = '#1a1a2a';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // 金肩章
+  ctx.fillStyle = '#d4af37';
+  ctx.beginPath(); ctx.ellipse(-b.r*0.75, -b.r*0.15, 5, 3.5, 0, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(b.r*0.75, -b.r*0.15, 5, 3.5, 0, 0, Math.PI*2); ctx.fill();
+
+  // 军帽
+  ctx.fillStyle = '#1a1a2a';
+  ctx.beginPath();
+  ctx.ellipse(0, -b.r*0.75, b.r*0.85, b.r*0.22, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = '#3a2a4a';
+  ctx.beginPath();
+  ctx.ellipse(0, -b.r*0.95, b.r*0.65, b.r*0.4, 0, Math.PI, 0);
+  ctx.fill();
+  ctx.strokeStyle = '#1a1a2a';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.fillStyle = '#d4af37';
+  ctx.beginPath();
+  ctx.arc(0, -b.r*0.95, 3, 0, Math.PI*2);
+  ctx.fill();
+
+  // 眼睛
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.ellipse(-4, -b.r*0.35, 2.5, 1.8, 0, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(4, -b.r*0.35, 2.5, 1.8, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#1a1a2a';
+  ctx.beginPath(); ctx.arc(-4, -b.r*0.35, 1.2, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(4, -b.r*0.35, 1.2, 0, Math.PI*2); ctx.fill();
+
+  // 枪
+  const ang = b.angle;
+  ctx.strokeStyle = '#1b1b1f';
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(Math.cos(ang)*b.r*0.6, Math.sin(ang)*b.r*0.6);
+  ctx.lineTo(Math.cos(ang)*b.r*1.9, Math.sin(ang)*b.r*1.9);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawBossSoldier(b, color, isMain) {
+  ctx.save();
+  ctx.translate(b.x, b.y);
+
+  ctx.fillStyle = b.hurt > 0 ? '#ff6a5a' : color;
+  ctx.beginPath();
+  ctx.arc(0, 0, b.r, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = isMain ? '#ff5030' : 'rgba(0,0,0,0.6)';
   ctx.lineWidth = isMain ? 3 : 2;
   ctx.stroke();
 
@@ -2438,6 +2726,51 @@ function drawGenericBossSoldier(b, isMain) {
   ctx.moveTo(Math.cos(ang)*b.r*0.6, Math.sin(ang)*b.r*0.6);
   ctx.lineTo(Math.cos(ang)*b.r*1.8, Math.sin(ang)*b.r*1.8);
   ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawMGSoldier(b) {
+  ctx.save();
+  ctx.translate(b.x, b.y);
+
+  ctx.fillStyle = b.hurt > 0 ? '#ff6a5a' : '#4a3a2a';
+  ctx.beginPath();
+  ctx.arc(0, 0, b.r, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = '#1a1a1a';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // 钢盔
+  ctx.fillStyle = '#2a2a2a';
+  ctx.beginPath();
+  ctx.arc(0, -b.r*0.2, b.r*0.75, Math.PI, 0);
+  ctx.fill();
+
+  // 眼睛
+  ctx.fillStyle = '#1a1a1a';
+  ctx.beginPath(); ctx.arc(-b.r*0.22, -b.r*0.05, 1.5, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(b.r*0.22, -b.r*0.05, 1.5, 0, Math.PI*2); ctx.fill();
+
+  // 机枪（更大的枪管）
+  const ang = b.angle;
+  ctx.strokeStyle = '#1a1a1a';
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(Math.cos(ang)*b.r*0.5, Math.sin(ang)*b.r*0.5);
+  ctx.lineTo(Math.cos(ang)*b.r*1.9, Math.sin(ang)*b.r*1.9);
+  ctx.stroke();
+  // 三脚架
+  ctx.strokeStyle = '#3a3a3a';
+  ctx.lineWidth = 2;
+  const tripodBase = b.r*0.4;
+  for (let i=-1;i<=1;i++) {
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(ang)*b.r*1.2, Math.sin(ang)*b.r*1.2);
+    ctx.lineTo(Math.cos(ang)*b.r*0.3 + i*8, Math.sin(ang)*b.r*0.3 + 10);
+    ctx.stroke();
+  }
 
   ctx.restore();
 }
@@ -2545,7 +2878,6 @@ function drawTank(t) {
   drawNameLabel('双人坦克', t.x, t.y-t.r-22, 'rgba(255,220,100,0.98)', 10);
 }
 
-/* ================= 副地图主题渲染 ================= */
 function drawSubMapBackground(theme, mapW, mapH) {
   if (theme === 'cotton') {
     ctx.fillStyle = '#2a4220';
@@ -3158,7 +3490,7 @@ function drawGlobalUI() {
   ctx.fillText('商 店', shopBtnX+shopBtnW/2, shopBtnY+shopBtnH/2+1);
 
   if (currentMap === 'city' && !warActive && !gameOver) {
-    const warBtnW = 140, warBtnH = 34;
+    const warBtnW = 160, warBtnH = 34;
     const warBtnX = W - 240 - warBtnW;
     const canWar = money >= mode.warPrice;
     if (canWar) {
@@ -3273,9 +3605,11 @@ function drawCityUI() {
 
   if (warActive) {
     ctx.font = 'bold 13px "Courier New", monospace';
-    const aliveBoss = warBosses.filter(b => !b.dead).length;
+    const aliveBoss = warBosses.filter(b => !b.dead && b.essential).length;
+    const swarmCount = warBosses.filter(b => !b.dead && !b.essential).length;
     ctx.fillStyle = warCleared ? 'rgba(120,220,140,0.95)' : 'rgba(255,100,80,'+(0.7+Math.sin(time*4)*0.2).toFixed(2)+')';
-    let warTxt = warCleared ? '★ 战争胜利！' : '⚔ 战争进行中 · Boss剩余 '+aliveBoss;
+    let warTxt = warCleared ? '★ 战争胜利！' : '⚔ Boss剩余 '+aliveBoss;
+    if (swarmCount > 0) warTxt += ' · 冲锋兵 '+swarmCount;
     ctx.fillText(warTxt, 22, 108);
     if (reviveQueue.length > 0) {
       ctx.fillStyle = 'rgba(120,220,200,0.8)';
@@ -3491,8 +3825,8 @@ function drawShop() {
   const itemH = 58;
   const limit = warActive ? maxAlliesWar : MAX_ALLIES;
   const items = [
-    { label:'补充弹药 15发', price:20, can: money >= 20 },
-    { label:'草药酒 +30', price:15, can: money >= 15 },
+    { label:'补充弹药 15发', price:60, can: money >= 60 },
+    { label:'草药酒 +30', price:45, can: money >= 45 },
     { label:'雇佣'+mode.allyLabel, price:mode.allyPrice, can: money >= mode.allyPrice && allies.length < limit },
     { label:'派遣 → '+mode.subMaps.farm.name, price:0, can: allies.length > 0 },
     { label:'派遣 → '+mode.subMaps.mine.name, price:0, can: allies.length > 0 },
@@ -3630,9 +3964,17 @@ function drawMinimap() {
   }
   for (const b of warBosses) {
     if (b.dead) continue;
-    ctx.fillStyle = b.isMainBoss ? 'rgba(255,50,30,1)' : 'rgba(255,140,60,0.9)';
-    const sz = b.isMainBoss ? 5 : 2.5;
-    ctx.fillRect(mx+b.x*s-sz/2, my+b.y*s-sz/2, sz, sz);
+    if (b.isMainBoss) {
+      ctx.fillStyle = 'rgba(255,50,30,1)';
+      ctx.fillRect(mx+b.x*s-2.5, my+b.y*s-2.5, 5, 5);
+    } else if (!b.essential) {
+      // 青年团：橙色小点
+      ctx.fillStyle = 'rgba(255,160,60,0.75)';
+      ctx.fillRect(mx+b.x*s-1.5, my+b.y*s-1.5, 3, 3);
+    } else {
+      ctx.fillStyle = 'rgba(255,140,60,0.9)';
+      ctx.fillRect(mx+b.x*s-1.5, my+b.y*s-1.5, 3, 3);
+    }
   }
   for (const a of allies) {
     if (a.isTank) {
@@ -3689,6 +4031,7 @@ function init() {
   currentMap = 'city';
   warActive = false; warCleared = false; warClearTimer = 0;
   warBosses = []; reviveQueue = []; warSnapshot = null;
+  blitzRegenTimer = 0;
 
   level = 1; xp = 0; xpNext = 6;
 
