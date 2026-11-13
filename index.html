@@ -621,7 +621,6 @@ function updateSubMapAllies(mapState, dt) {
     if (n.amount <= 0) { n.respawnTimer -= dt; if (n.respawnTimer <= 0) n.amount = NODE_AMOUNT; }
   }
 
-  // 投资基地复利增长
   if (currentMap === 'mine' && mode.subMaps.mine.theme === 'investment' && mode.investment) {
     const inv = mode.investment;
     const growthRate = inv.baseRate + inv.perWorkerRate * mapState.allies.length;
@@ -634,7 +633,6 @@ function calcOffline(mapState) {
   const elapsed = (now - mapState.lastUpdate) / 1000;
   if (elapsed > 0.05) {
     mapState.warehouse += mapState.allies.length * OFFLINE_RATE * elapsed;
-    // 离线时投资基地也复利增长
     if (mode.subMaps.mine.theme === 'investment' && mode.investment) {
       const inv = mode.investment;
       const growthRate = inv.baseRate + inv.perWorkerRate * mapState.allies.length;
@@ -672,7 +670,6 @@ function sendAllyToFarm() { if (allies.length === 0) return; allies.pop().dead =
 function sendAllyToMine() { if (allies.length === 0) return; allies.pop().dead = true; addTransport('ally-to-mine', { count:1 }); }
 
 function shipResources(mapState, resourceType) {
-  // 投资基地：提取 70%，保留 30% 继续复利
   if (resourceType === 'mine' && mode.subMaps.mine.theme === 'investment' && mode.investment) {
     const total = mapState.warehouse;
     const withdraw = Math.floor(total * mode.investment.withdrawRatio);
@@ -694,7 +691,6 @@ function recallAllies(mapState, from) {
   addTransport('ally-to-city', { count, from });
 }
 
-/* ================= 双人坦克 ================= */
 function formTanks() {
   if (!mode.warTank) return;
   const newAllies = [];
@@ -721,7 +717,6 @@ function formTanks() {
     };
     newAllies.push(tank);
   }
-  // 奇数时保留最后一个
   if (allies.length % 2 === 1) newAllies.push(allies[allies.length-1]);
   allies = newAllies;
 }
@@ -742,19 +737,14 @@ function updateTank(t, dt) {
 
   if (target) {
     t.angle = Math.atan2(target.y-t.y, target.x-t.x);
-
-    // 主炮：范围伤害
     if (t.mainCd <= 0 && nd < 550) {
       t.mainCd = 2.5;
       fireTankMain(t, target);
     }
-    // 机枪：快速连射
     if (t.mgCd <= 0 && nd < 400) {
       t.mgCd = 0.16;
       fireTankMG(t, target);
     }
-
-    // 移动
     if (nd > 320) {
       t.x += Math.cos(t.angle) * t.speed * dt;
       t.y += Math.sin(t.angle) * t.speed * dt;
@@ -773,7 +763,6 @@ function updateTank(t, dt) {
   }
   pushOut(t, t.r);
 
-  // 与其他盟友分离
   for (const b of allies) {
     if (b === t || b.dead) continue;
     const ddx = b.x - t.x, ddy = b.y - t.y;
@@ -827,7 +816,6 @@ function fireTankMG(t, target) {
   sfxShot(0.08, 1.5);
 }
 
-/* ================= 兄弟射击 ================= */
 function allyShoot(a, target) {
   const baseAng = Math.atan2(target.y-a.y, target.x-a.x);
   const ang = baseAng + rand(-0.08, 0.08);
@@ -848,7 +836,6 @@ function allyShoot(a, target) {
   sfxShot(0.05, 1.2);
 }
 
-/* ================= 发动战争 ================= */
 function startWar() {
   if (warActive || money < mode.warPrice || gameOver) return;
 
@@ -889,7 +876,6 @@ function startWar() {
 
   for (const a of allies) a.revivable = true;
 
-  // 形成双人坦克（仅德国模式）
   formTanks();
 
   spawnBosses();
@@ -940,7 +926,6 @@ function spawnBosses() {
   }
 }
 
-/* ================= 复活系统 ================= */
 function queueRevive(deadEntity) {
   if (!warActive) return;
   reviveQueue.push({
@@ -967,7 +952,6 @@ function updateReviveQueue(dt) {
   }
 }
 
-/* ================= 战争失败回滚 ================= */
 function rollbackWar() {
   if (!warSnapshot) return;
   money = warSnapshot.money;
@@ -1033,7 +1017,6 @@ function advanceChapter() {
   }
 }
 
-/* ================= 点击处理 ================= */
 function getStartLayout() {
   const modes = [MODES.south1835, MODES.britain, MODES.germany];
   const cardW = Math.min(380, W-40);
@@ -1386,16 +1369,12 @@ function updateAlly(a, dt) {
   if (target) {
     a.angle = Math.atan2(target.y-a.y, target.x-a.x);
     const reach = a.r + target.r + 6;
-
-    // 有枪：优先远程射击
     if (a.hasGun && a.gunRange > 0 && nd < a.gunRange && nd > 35 && a.fireCd <= 0) {
       a.fireCd = mode.allyGunConfig.fireRate;
       allyShoot(a, target);
     }
-
     if (nd > reach) { tx = target.x; ty = target.y; }
     else if (a.attackCd <= 0 && nd > 35) {
-      // 近战（即使有枪，贴身也能打）
       a.attackCd = 0.55; a.punchT = 0.12;
       const len = nd || 1;
       damageEnemy(target, a.atk, (target.x-a.x)/len, (target.y-a.y)/len);
@@ -1634,7 +1613,6 @@ function updateBullets(dt) {
               addDecal(a.x, a.y, rand(12,22));
               shake = Math.max(shake, 8);
               if (a.isTank) {
-                // 坦克爆炸
                 for (let p=0;p<30;p++) spawnParticle(a.x,a.y,rand(0,Math.PI*2),rand(80,400),'255,150,50',rand(0.3,0.8),rand(3,6));
                 shake = Math.max(shake, 15);
               }
@@ -1811,7 +1789,6 @@ function drawNameLabel(text, x, y, color, size) {
   ctx.fillText(text, x, y);
 }
 
-/* ================= 开始页面 ================= */
 function renderStartScreen() {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   ctx.fillStyle = '#0d0b08'; ctx.fillRect(0, 0, W, H);
@@ -1872,7 +1849,6 @@ function renderStartScreen() {
   ctx.fillText('点击卡片进入对应部曲 · 通关后自动进入下一部', W/2, H-30);
 }
 
-/* ================= 主城渲染 ================= */
 function renderCity() {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   ctx.fillStyle = '#0d0b08'; ctx.fillRect(0, 0, W, H);
@@ -2053,38 +2029,417 @@ function drawEnemy(e) {
   drawNameLabel(label, e.x, e.y-e.r-(e.hp<e.maxHp?18:14), e.isElite?'rgba(255,220,120,0.95)':'rgba(215,200,190,0.78)', e.isElite?11:9.5);
 }
 
+/* ================= Boss 特色外观 ================= */
 function drawBoss(b) {
   const pulse = 1 + Math.sin(time*3 + b.x)*0.1;
-  const color = b.isMainBoss ? 'rgba(255,80,60,' : 'rgba(255,140,80,';
+  const isMain = b.isMainBoss;
+  const color = isMain ? 'rgba(255,80,60,' : 'rgba(255,140,80,';
+
+  // 地面光环
   ctx.strokeStyle = color + (0.4 + Math.sin(time*4)*0.2).toFixed(2) + ')';
-  ctx.lineWidth = b.isMainBoss ? 4 : 2;
+  ctx.lineWidth = isMain ? 4 : 2;
   ctx.beginPath(); ctx.arc(b.x, b.y, b.r*2.2*pulse, 0, Math.PI*2); ctx.stroke();
 
+  // 阴影
   ctx.fillStyle = 'rgba(0,0,0,0.55)';
   ctx.beginPath(); ctx.ellipse(b.x+4, b.y+6, b.r*1.1, b.r*0.85, 0, 0, Math.PI*2); ctx.fill();
 
-  ctx.fillStyle = b.hurt > 0 ? '#ff6a5a' : b.template.color;
-  ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI*2); ctx.fill();
-  ctx.strokeStyle = b.isMainBoss ? '#ff5030' : 'rgba(255,140,80,0.9)';
-  ctx.lineWidth = b.isMainBoss ? 3 : 2; ctx.stroke();
-
-  if (b.isMainBoss) {
-    ctx.fillStyle = '#ffd060';
-    ctx.beginPath(); ctx.arc(b.x, b.y-2, b.r*0.5, Math.PI, 0); ctx.fill();
-    ctx.fillRect(b.x-b.r*0.75, b.y-4, b.r*1.5, 3);
+  if (b.name === '南方联邦将军') {
+    drawConfederateGeneral(b);
+  } else if (b.name === '希特勒') {
+    drawHitler(b);
+  } else if (b.name === '青年团') {
+    drawHitlerYouth(b);
+  } else {
+    // 政府军 或 其他一般士兵
+    drawGenericBossSoldier(b, isMain);
   }
 
-  ctx.strokeStyle = '#221a16'; ctx.lineWidth = b.isMainBoss ? 5 : 4;
-  ctx.beginPath(); ctx.moveTo(b.x+Math.cos(b.angle)*b.r*0.6, b.y+Math.sin(b.angle)*b.r*0.6);
-  ctx.lineTo(b.x+Math.cos(b.angle)*b.r*1.8, b.y+Math.sin(b.angle)*b.r*1.8); ctx.stroke();
-
-  const bw = b.isMainBoss ? 90 : 32;
+  // 血条
+  const bw = isMain ? 90 : 32;
   ctx.fillStyle = 'rgba(0,0,0,0.7)';
-  ctx.fillRect(b.x-bw/2, b.y-b.r-16, bw, b.isMainBoss ? 6 : 4);
-  ctx.fillStyle = b.isMainBoss ? '#ff5030' : '#ff8040';
-  ctx.fillRect(b.x-bw/2, b.y-b.r-16, bw*(b.hp/b.maxHp), b.isMainBoss ? 6 : 4);
+  ctx.fillRect(b.x-bw/2, b.y-b.r-16, bw, isMain ? 6 : 4);
+  ctx.fillStyle = isMain ? '#ff5030' : '#ff8040';
+  ctx.fillRect(b.x-bw/2, b.y-b.r-16, bw*(b.hp/b.maxHp), isMain ? 6 : 4);
 
-  drawNameLabel('☠ '+b.name, b.x, b.y-b.r-(b.isMainBoss?24:18), b.isMainBoss?'rgba(255,220,120,1)':'rgba(255,180,140,0.9)', b.isMainBoss?12:9.5);
+  // 名字
+  drawNameLabel('☠ '+b.name, b.x, b.y-b.r-(isMain?24:18),
+    isMain?'rgba(255,220,120,1)':'rgba(255,180,140,0.9)', isMain?12:9.5);
+}
+
+// 南方联邦将军：灰蓝军帽、八字胡、金肩章
+function drawConfederateGeneral(b) {
+  const t = time*2;
+  ctx.save();
+  ctx.translate(b.x, b.y);
+
+  // 披风（背后飘动）
+  ctx.fillStyle = 'rgba(120,20,20,0.7)';
+  ctx.beginPath();
+  ctx.moveTo(-b.r*0.7, -b.r*0.3);
+  ctx.quadraticCurveTo(-b.r*1.8 + Math.sin(t)*4, b.r*0.5, -b.r*1.4, b.r*1.1);
+  ctx.lineTo(b.r*1.4, b.r*1.1);
+  ctx.quadraticCurveTo(b.r*1.8 + Math.sin(t)*4, b.r*0.5, b.r*0.7, -b.r*0.3);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(212,175,55,0.6)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // 身体（灰蓝色制服）
+  ctx.fillStyle = b.hurt > 0 ? '#ff6a5a' : '#5a5a6e';
+  ctx.beginPath();
+  ctx.arc(0, 0, b.r, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = '#1a1a2a';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // 金色肩章
+  ctx.fillStyle = '#d4af37';
+  ctx.beginPath(); ctx.ellipse(-b.r*0.75, -b.r*0.15, 5, 3.5, 0, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(b.r*0.75, -b.r*0.15, 5, 3.5, 0, 0, Math.PI*2); ctx.fill();
+  // 肩章流苏
+  ctx.strokeStyle = '#d4af37';
+  ctx.lineWidth = 1;
+  for (let i=-1;i<=1;i++) {
+    ctx.beginPath();
+    ctx.moveTo(-b.r*0.75 + i*2, -b.r*0.15);
+    ctx.lineTo(-b.r*0.75 + i*2, b.r*0.1);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(b.r*0.75 + i*2, -b.r*0.15);
+    ctx.lineTo(b.r*0.75 + i*2, b.r*0.1);
+    ctx.stroke();
+  }
+
+  // 胸口纽扣
+  ctx.fillStyle = '#d4af37';
+  for (let i=0;i<3;i++) {
+    ctx.beginPath();
+    ctx.arc(0, -b.r*0.1 + i*4, 1.5, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  // 军帽
+  // 帽檐
+  ctx.fillStyle = '#1a1a1a';
+  ctx.beginPath();
+  ctx.ellipse(0, -b.r*0.75, b.r*0.85, b.r*0.22, 0, 0, Math.PI*2);
+  ctx.fill();
+  // 帽身
+  ctx.fillStyle = '#5a5a6e';
+  ctx.beginPath();
+  ctx.ellipse(0, -b.r*0.95, b.r*0.65, b.r*0.4, 0, Math.PI, 0);
+  ctx.fill();
+  ctx.strokeStyle = '#1a1a2a';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  // 帽徽（金色）
+  ctx.fillStyle = '#d4af37';
+  ctx.beginPath();
+  ctx.arc(0, -b.r*0.95, 3, 0, Math.PI*2);
+  ctx.fill();
+  // 帽徽上的小星星
+  ctx.fillStyle = '#fff0c0';
+  ctx.beginPath(); ctx.arc(0, -b.r*0.95, 1, 0, Math.PI*2); ctx.fill();
+
+  // 眼睛（锐利）
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.ellipse(-4, -b.r*0.35, 2.5, 1.8, 0, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(4, -b.r*0.35, 2.5, 1.8, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#1a1a2a';
+  ctx.beginPath(); ctx.arc(-4, -b.r*0.35, 1.2, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(4, -b.r*0.35, 1.2, 0, Math.PI*2); ctx.fill();
+
+  // 八字胡
+  ctx.strokeStyle = '#3a3a3a';
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(-b.r*0.55, -b.r*0.05);
+  ctx.quadraticCurveTo(-b.r*0.2, b.r*0.05, 0, -b.r*0.05);
+  ctx.quadraticCurveTo(b.r*0.2, b.r*0.05, b.r*0.55, -b.r*0.05);
+  ctx.stroke();
+  ctx.lineCap = 'butt';
+
+  // 枪
+  const ang = b.angle;
+  ctx.strokeStyle = '#1b1b1f';
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(Math.cos(ang)*b.r*0.6, Math.sin(ang)*b.r*0.6);
+  ctx.lineTo(Math.cos(ang)*b.r*1.9, Math.sin(ang)*b.r*1.9);
+  ctx.stroke();
+  ctx.fillStyle = '#4a4a52';
+  ctx.beginPath();
+  ctx.arc(Math.cos(ang)*b.r*1.9, Math.sin(ang)*b.r*1.9, 3, 0, Math.PI*2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+// 希特勒：斜刘海、方短胡、纳粹袖标
+function drawHitler(b) {
+  const t = time*2;
+  ctx.save();
+  ctx.translate(b.x, b.y);
+
+  // 身体（灰绿色军装）
+  ctx.fillStyle = b.hurt > 0 ? '#ff6a5a' : '#4a4a3a';
+  ctx.beginPath();
+  ctx.arc(0, 0, b.r, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = '#1a1a1a';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // 军装领口
+  ctx.fillStyle = '#2a2a1a';
+  ctx.beginPath();
+  ctx.moveTo(-b.r*0.4, -b.r*0.5);
+  ctx.lineTo(0, -b.r*0.1);
+  ctx.lineTo(b.r*0.4, -b.r*0.5);
+  ctx.lineTo(b.r*0.3, -b.r*0.7);
+  ctx.lineTo(-b.r*0.3, -b.r*0.7);
+  ctx.closePath();
+  ctx.fill();
+
+  // 铁十字勋章（左胸）
+  ctx.fillStyle = '#2a2a2a';
+  ctx.beginPath();
+  ctx.arc(-b.r*0.45, b.r*0.15, 4.5, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = '#d4af37';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.strokeStyle = '#e0e0e0';
+  ctx.beginPath();
+  ctx.moveTo(-b.r*0.45 - 2.5, b.r*0.15);
+  ctx.lineTo(-b.r*0.45 + 2.5, b.r*0.15);
+  ctx.moveTo(-b.r*0.45, b.r*0.15 - 2.5);
+  ctx.lineTo(-b.r*0.45, b.r*0.15 + 2.5);
+  ctx.stroke();
+
+  // 纳粹红袖标（左臂，也就是画面右侧）
+  ctx.fillStyle = '#aa2020';
+  ctx.beginPath();
+  ctx.ellipse(b.r*0.75, b.r*0.25, 5, 9, 0.3, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(b.r*0.75, b.r*0.25, 3.5, 0, Math.PI*2);
+  ctx.fill();
+  // 袖标里的黑色符号（简化卐字，用一个黑方块代替）
+  ctx.fillStyle = '#1a1a1a';
+  ctx.fillRect(b.r*0.75-2, b.r*0.25-2, 4, 4);
+
+  // 头部
+  // 头皮/头发底色
+  ctx.fillStyle = '#3a2a1a';
+  ctx.beginPath();
+  ctx.arc(0, -b.r*0.45, b.r*0.72, 0, Math.PI*2);
+  ctx.fill();
+
+  // 脸部（肤色）
+  ctx.fillStyle = '#e0b090';
+  ctx.beginPath();
+  ctx.arc(0, -b.r*0.4, b.r*0.6, 0, Math.PI*2);
+  ctx.fill();
+
+  // ===== 标志性斜刘海 =====
+  // 左侧头发（从右上往左下斜）
+  ctx.fillStyle = '#2a1a0a';
+  ctx.beginPath();
+  ctx.moveTo(-b.r*0.62, -b.r*0.55);
+  ctx.quadraticCurveTo(-b.r*0.5, -b.r*0.95, b.r*0.1, -b.r*0.95);
+  ctx.lineTo(b.r*0.55, -b.r*0.75);
+  ctx.quadraticCurveTo(b.r*0.2, -b.r*0.68, -b.r*0.05, -b.r*0.55);
+  ctx.quadraticCurveTo(-b.r*0.3, -b.r*0.5, -b.r*0.62, -b.r*0.55);
+  ctx.closePath();
+  ctx.fill();
+  // 斜刘海尖端
+  ctx.beginPath();
+  ctx.moveTo(-b.r*0.62, -b.r*0.55);
+  ctx.quadraticCurveTo(-b.r*0.4, -b.r*0.45, -b.r*0.3, -b.r*0.25);
+  ctx.quadraticCurveTo(-b.r*0.4, -b.r*0.35, -b.r*0.62, -b.r*0.55);
+  ctx.closePath();
+  ctx.fill();
+  // 头发高光
+  ctx.strokeStyle = 'rgba(150,120,80,0.5)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(-b.r*0.4, -b.r*0.85);
+  ctx.quadraticCurveTo(b.r*0.05, -b.r*0.88, b.r*0.4, -b.r*0.78);
+  ctx.stroke();
+
+  // 耳朵
+  ctx.fillStyle = '#d0a080';
+  ctx.beginPath(); ctx.ellipse(-b.r*0.6, -b.r*0.38, 3, 4, 0, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(b.r*0.6, -b.r*0.38, 3, 4, 0, 0, Math.PI*2); ctx.fill();
+
+  // 眼睛（锐利、略带阴鸷）
+  ctx.fillStyle = '#f0f0f0';
+  ctx.beginPath(); ctx.ellipse(-b.r*0.22, -b.r*0.4, 2.5, 1.8, 0, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(b.r*0.22, -b.r*0.4, 2.5, 1.8, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#2a3a4a';
+  ctx.beginPath(); ctx.arc(-b.r*0.22, -b.r*0.4, 1.3, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(b.r*0.22, -b.r*0.4, 1.3, 0, Math.PI*2); ctx.fill();
+  // 眼窝阴影
+  ctx.fillStyle = 'rgba(0,0,0,0.2)';
+  ctx.beginPath(); ctx.ellipse(-b.r*0.22, -b.r*0.32, 3.5, 2, 0, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(b.r*0.22, -b.r*0.32, 3.5, 2, 0, 0, Math.PI*2); ctx.fill();
+
+  // 鼻子
+  ctx.fillStyle = '#c09878';
+  ctx.beginPath();
+  ctx.moveTo(0, -b.r*0.42);
+  ctx.lineTo(-b.r*0.08, -b.r*0.25);
+  ctx.lineTo(b.r*0.08, -b.r*0.25);
+  ctx.closePath();
+  ctx.fill();
+
+  // ===== 标志性方短胡 =====
+  ctx.fillStyle = '#1a1208';
+  ctx.fillRect(-b.r*0.2, -b.r*0.2, b.r*0.4, b.r*0.11);
+  // 胡须上缘微斜
+  ctx.beginPath();
+  ctx.moveTo(-b.r*0.2, -b.r*0.2);
+  ctx.lineTo(b.r*0.2, -b.r*0.2);
+  ctx.lineTo(b.r*0.18, -b.r*0.16);
+  ctx.lineTo(-b.r*0.18, -b.r*0.16);
+  ctx.closePath();
+  ctx.fill();
+
+  // 下巴轮廓
+  ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(0, -b.r*0.42, b.r*0.55, 0.3, Math.PI - 0.3);
+  ctx.stroke();
+
+  // 枪
+  const ang = b.angle;
+  ctx.strokeStyle = '#1b1b1f';
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(Math.cos(ang)*b.r*0.6, Math.sin(ang)*b.r*0.6);
+  ctx.lineTo(Math.cos(ang)*b.r*1.9, Math.sin(ang)*b.r*1.9);
+  ctx.stroke();
+  ctx.fillStyle = '#3a3a42';
+  ctx.beginPath();
+  ctx.arc(Math.cos(ang)*b.r*1.9, Math.sin(ang)*b.r*1.9, 3, 0, Math.PI*2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+// 青年团：戴帽的少年兵，速度快但体型小
+function drawHitlerYouth(b) {
+  ctx.save();
+  ctx.translate(b.x, b.y);
+
+  // 身体（褐色制服，少年兵）
+  ctx.fillStyle = b.hurt > 0 ? '#ff6a5a' : '#6a4a2a';
+  ctx.beginPath();
+  ctx.arc(0, 0, b.r, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = '#2a1a0a';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // 领口
+  ctx.fillStyle = '#3a2a1a';
+  ctx.fillRect(-b.r*0.3, -b.r*0.5, b.r*0.6, b.r*0.15);
+
+  // 黑色领巾
+  ctx.fillStyle = '#1a1a1a';
+  ctx.beginPath();
+  ctx.moveTo(-b.r*0.25, -b.r*0.35);
+  ctx.lineTo(0, -b.r*0.1);
+  ctx.lineTo(b.r*0.25, -b.r*0.35);
+  ctx.lineTo(0, -b.r*0.25);
+  ctx.closePath();
+  ctx.fill();
+
+  // 头部（少年脸，肤色）
+  ctx.fillStyle = '#e8c0a0';
+  ctx.beginPath();
+  ctx.arc(0, -b.r*0.35, b.r*0.55, 0, Math.PI*2);
+  ctx.fill();
+
+  // 眼
+  ctx.fillStyle = '#1a1a1a';
+  ctx.beginPath(); ctx.arc(-b.r*0.18, -b.r*0.38, 1.3, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(b.r*0.18, -b.r*0.38, 1.3, 0, Math.PI*2); ctx.fill();
+
+  // 少年帽（棕色小帽，帽檐向前）
+  ctx.fillStyle = '#3a2a1a';
+  ctx.beginPath();
+  ctx.arc(0, -b.r*0.55, b.r*0.62, Math.PI, 0);
+  ctx.fill();
+  // 帽檐
+  ctx.fillStyle = '#2a1a0a';
+  ctx.beginPath();
+  ctx.ellipse(0, -b.r*0.55, b.r*0.7, b.r*0.15, 0, 0, Math.PI*2);
+  ctx.fill();
+  // 帽徽
+  ctx.fillStyle = '#aa2020';
+  ctx.beginPath();
+  ctx.arc(0, -b.r*0.72, 2.5, 0, Math.PI*2);
+  ctx.fill();
+
+  // 步枪
+  const ang = b.angle;
+  ctx.strokeStyle = '#3a2a1a';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(Math.cos(ang)*b.r*0.5, Math.sin(ang)*b.r*0.5);
+  ctx.lineTo(Math.cos(ang)*b.r*1.6, Math.sin(ang)*b.r*1.6);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+// 政府军 / 通用士兵
+function drawGenericBossSoldier(b, isMain) {
+  ctx.save();
+  ctx.translate(b.x, b.y);
+
+  // 身体
+  ctx.fillStyle = b.hurt > 0 ? '#ff6a5a' : b.template.color;
+  ctx.beginPath();
+  ctx.arc(0, 0, b.r, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = isMain ? '#ff5030' : 'rgba(255,140,80,0.9)';
+  ctx.lineWidth = isMain ? 3 : 2;
+  ctx.stroke();
+
+  // 头盔
+  ctx.fillStyle = '#3a3a3a';
+  ctx.beginPath();
+  ctx.arc(0, -b.r*0.2, b.r*0.75, Math.PI, 0);
+  ctx.fill();
+  ctx.fillStyle = '#2a2a2a';
+  ctx.beginPath();
+  ctx.ellipse(0, -b.r*0.2, b.r*0.78, b.r*0.15, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  // 眼睛
+  ctx.fillStyle = '#1a1a1a';
+  ctx.beginPath(); ctx.arc(-b.r*0.2, -b.r*0.05, 1.5, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(b.r*0.2, -b.r*0.05, 1.5, 0, Math.PI*2); ctx.fill();
+
+  // 枪
+  const ang = b.angle;
+  ctx.strokeStyle = '#221a16';
+  ctx.lineWidth = isMain ? 5 : 4;
+  ctx.beginPath();
+  ctx.moveTo(Math.cos(ang)*b.r*0.6, Math.sin(ang)*b.r*0.6);
+  ctx.lineTo(Math.cos(ang)*b.r*1.8, Math.sin(ang)*b.r*1.8);
+  ctx.stroke();
+
+  ctx.restore();
 }
 
 function drawAlly(a) {
@@ -2097,7 +2452,6 @@ function drawAlly(a) {
   ctx.beginPath(); ctx.arc(a.x, a.y-2, a.r*0.5, Math.PI, 0); ctx.fill();
   ctx.fillRect(a.x-a.r*0.75, a.y-4, a.r*1.5, 3);
 
-  // 有枪的话画枪
   if (a.hasGun) {
     ctx.strokeStyle = '#221a16';
     ctx.lineWidth = 3;
@@ -2122,7 +2476,6 @@ function drawAlly(a) {
 }
 
 function drawTank(t) {
-  // 阴影
   ctx.fillStyle = 'rgba(0,0,0,0.55)';
   ctx.beginPath();
   ctx.ellipse(t.x+5, t.y+8, t.r*1.2, t.r*0.85, 0, 0, Math.PI*2);
@@ -2132,7 +2485,6 @@ function drawTank(t) {
   ctx.translate(t.x, t.y);
   ctx.rotate(t.angle);
 
-  // 履带
   ctx.fillStyle = '#1a1a1a';
   ctx.fillRect(-t.r, -t.r*0.75, t.r*2, t.r*0.35);
   ctx.fillRect(-t.r, t.r*0.4, t.r*2, t.r*0.35);
@@ -2145,18 +2497,15 @@ function drawTank(t) {
     ctx.stroke();
   }
 
-  // 车身
   ctx.fillStyle = '#5a5a4a';
   ctx.fillRect(-t.r*0.85, -t.r*0.55, t.r*1.7, t.r*1.1);
   ctx.strokeStyle = 'rgba(0,0,0,0.6)';
   ctx.lineWidth = 2;
   ctx.strokeRect(-t.r*0.85, -t.r*0.55, t.r*1.7, t.r*1.1);
 
-  // 车身高光
   ctx.fillStyle = 'rgba(255,220,150,0.15)';
   ctx.fillRect(-t.r*0.85, -t.r*0.55, t.r*1.7, 3);
 
-  // 炮塔
   ctx.fillStyle = '#6a6a5a';
   ctx.beginPath();
   ctx.arc(0, 0, t.r*0.55, 0, Math.PI*2);
@@ -2165,20 +2514,17 @@ function drawTank(t) {
   ctx.lineWidth = 2;
   ctx.stroke();
 
-  // 炮管
   ctx.fillStyle = '#2a2a1a';
   ctx.fillRect(t.r*0.35, -3, t.r*0.75, 6);
   ctx.fillStyle = '#1a1a0a';
   ctx.fillRect(t.r*1.05, -2, 4, 4);
 
-  // 乘员标志（两个金色圆圈）
   ctx.fillStyle = '#d4af37';
   ctx.beginPath();
   ctx.arc(-7, 0, 3, 0, Math.PI*2);
   ctx.arc(7, 0, 3, 0, Math.PI*2);
   ctx.fill();
 
-  // 受损状态（红色闪烁）
   if (t.hurt > 0) {
     ctx.fillStyle = 'rgba(255,60,40,0.3)';
     ctx.fillRect(-t.r*0.85, -t.r*0.55, t.r*1.7, t.r*1.1);
@@ -2186,7 +2532,6 @@ function drawTank(t) {
 
   ctx.restore();
 
-  // 血条
   const bw = 55;
   ctx.fillStyle = 'rgba(0,0,0,0.75)';
   ctx.fillRect(t.x-bw/2, t.y-t.r-18, bw, 6);
@@ -2197,12 +2542,10 @@ function drawTank(t) {
   ctx.lineWidth = 1;
   ctx.strokeRect(t.x-bw/2+0.5, t.y-t.r-18+0.5, bw-1, 5);
 
-  // 名字
   drawNameLabel('双人坦克', t.x, t.y-t.r-22, 'rgba(255,220,100,0.98)', 10);
 }
 
 /* ================= 副地图主题渲染 ================= */
-
 function drawSubMapBackground(theme, mapW, mapH) {
   if (theme === 'cotton') {
     ctx.fillStyle = '#2a4220';
@@ -2428,7 +2771,6 @@ function drawSubMapWarehouse(theme, wx, wy) {
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText('厂 房', wx, wy+15);
   } else if (theme === 'investment') {
-    // 银行 + 投资标牌
     ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fillRect(wx-54, wy-32, 126, 84);
     ctx.fillStyle = '#5a5a6a'; ctx.fillRect(wx-60, wy-30, 120, 70);
     ctx.fillStyle = 'rgba(200,200,220,0.15)';
@@ -2447,7 +2789,6 @@ function drawSubMapWarehouse(theme, wx, wy) {
     ctx.fillRect(wx-55, wy+20, 110, 5);
     ctx.fillRect(wx-60, wy+25, 120, 5);
 
-    // 股票走势小图表
     ctx.strokeStyle = '#d4af37';
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -2466,7 +2807,6 @@ function drawSubMapWarehouse(theme, wx, wy) {
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText('投 资', wx, wy+8);
 
-    // 显示复利提示
     ctx.font = 'bold 9px "Courier New", monospace';
     ctx.fillStyle = 'rgba(120,220,140,0.8)';
     const invRate = mode.investment ? (mode.investment.baseRate + mode.investment.perWorkerRate * (mine.allies?.length || 0)) : 0;
@@ -2610,9 +2950,7 @@ function drawSubMapNode(theme, n) {
     ctx.fillStyle = 'rgba(255,255,200,0.8)';
     ctx.fillRect(n.x-4, n.y-11, 8, 4);
   } else if (theme === 'investment') {
-    // 投资标的：金币堆或股票凭证
     if ((Math.floor(n.x) + Math.floor(n.y)) % 2 === 0) {
-      // 股票凭证
       ctx.fillStyle = 'rgba(220,200,140,0.95)';
       ctx.fillRect(n.x-14, n.y-10, 28, 20);
       ctx.strokeStyle = 'rgba(120,90,40,0.8)';
@@ -2626,13 +2964,11 @@ function drawSubMapNode(theme, n) {
         ctx.lineTo(n.x+10, n.y-6+k*4);
         ctx.stroke();
       }
-      // 印章
       ctx.fillStyle = 'rgba(180,30,30,0.6)';
       ctx.beginPath();
       ctx.arc(n.x+7, n.y+5, 4, 0, Math.PI*2);
       ctx.fill();
     } else {
-      // 金币堆
       ctx.fillStyle = '#d4af37';
       for (let k=0;k<4;k++) {
         const cx = n.x + ((k%2)*10 - 5);
@@ -3044,17 +3380,12 @@ function drawSubMapUI(mapState, type) {
 
   ctx.font = 'bold 13px "Courier New", monospace';
   ctx.fillStyle = 'rgba(255,240,200,0.9)';
-  if (type === 'cotton' && mode.subMaps.mine.theme === 'investment') {
+  if (type === 'mine' && mode.subMaps.mine.theme === 'investment') {
     const inv = mode.investment;
     const rate = (inv.baseRate + inv.perWorkerRate * mapState.allies.length) * 60 * 100;
     ctx.fillText('投资组合: $'+Math.floor(mapState.warehouse).toLocaleString()+' · +'+rate.toFixed(2)+'%/分', W/2, infoY+32);
   } else {
     ctx.fillText('仓库: '+Math.floor(mapState.warehouse)+' '+cfg.resourceName+' · $'+cfg.price+'/单位 · 兄弟: '+mapState.allies.length, W/2, infoY+32);
-  }
-
-  // 投资基地显示提取提示
-  if (type === 'cotton' && mode.subMaps.mine.theme === 'investment') {
-    // 这个分支不会走到，投资基地在 mine
   }
 
   const boostBtnW = Math.min(280, W*0.58);
@@ -3099,7 +3430,7 @@ function drawSubMapUI(mapState, type) {
   const bx1 = 30, by1 = H-70;
   const bx2 = W-btnW-30, by2 = H-70;
 
-  const isInvestment = (type === 'cotton' && mode.subMaps.mine.theme === 'investment');
+  const isInvestment = (type === 'mine' && mode.subMaps.mine.theme === 'investment');
   const canShip = isInvestment ? mapState.warehouse > 0 : Math.floor(mapState.warehouse) > 0;
   ctx.fillStyle = canShip ? 'rgba(212,175,55,0.28)' : 'rgba(0,0,0,0.5)';
   ctx.fillRect(bx1, by1, btnW, btnH);
@@ -3107,7 +3438,7 @@ function drawSubMapUI(mapState, type) {
   ctx.lineWidth = 2; ctx.strokeRect(bx1+0.5, by1+0.5, btnW-1, btnH-1);
   ctx.fillStyle = canShip ? 'rgba(255,240,200,0.98)' : 'rgba(212,175,55,0.35)';
   ctx.font = 'bold 15px "Courier New", monospace';
-  ctx.fillText('提取'+cfg.resourceName+'回城', bx1+btnW/2, by1+btnH/2+1);
+  ctx.fillText((isInvestment?'提取':'运送')+cfg.resourceName+'回城', bx1+btnW/2, by1+btnH/2+1);
 
   const canRecall = mapState.allies.length > 0;
   ctx.fillStyle = canRecall ? 'rgba(120,200,140,0.22)' : 'rgba(0,0,0,0.5)';
