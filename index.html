@@ -50,11 +50,16 @@ const REVIVE_TIME = 10;
 
 const FARM_MAP_W = 1600, FARM_MAP_H = 1200;
 const SUBMAP_CENTER_X = FARM_MAP_W / 2, SUBMAP_CENTER_Y = FARM_MAP_H / 2;
-const TRANSPORT_TIME = 10, NODE_RESPAWN = 5;
+const TRANSPORT_TIME = 5;
+const NODE_COUNT = 20;
+const NODE_AMOUNT = 5;
+const NODE_RESPAWN = 4;
+const OFFLINE_RATE = 0.5;
 const WORKER_MAX_HP = 100;
 
 const CHAPTER_ORDER = ['south1835', 'britain', 'germany'];
 
+/* ================= 三部曲数据 ================= */
 const MODES = {
   south1835: {
     id: 'south1835', chapter: 1, difficulty: '简单',
@@ -62,11 +67,12 @@ const MODES = {
     playerName: '老大', allyLabel: '黑人兄弟',
     allyNames: ['黑人兄弟·棉花田','黑人兄弟·铁匠','黑人兄弟·逃亡者','黑人兄弟·自由人','黑人兄弟·猎人','黑人兄弟·木匠','黑人兄弟·牧人'],
     diffMul: { hp: 0.7, dmg: 0.7 },
-    killMoney: { normal: 5, elite: 20 },
-    allyConfig: { maxHp: 90, atk: 16, speed: 280 },
+    killMoney: { normal: 10, elite: 40 },
+    allyConfig: { maxHp: 100, atk: 18, speed: 280 },
     allyPrice: 15,
-    warPrice: 10000,
-    startMoney: 100,
+    warPrice: 2000,
+    warReward: 500,
+    startMoney: 300,
     workerCollectTime: 1.0,
     enemyTemplates: [
       { id:'slavecatcher', name:'奴隶捕手', color:'#4a3a2e', hp:30, speed:[100,150], fire:[0.9,1.8], dmg:8, range:600 },
@@ -76,17 +82,17 @@ const MODES = {
       { id:'gambler', name:'赌徒', color:'#5a2a4a', hp:25, speed:[160,220], fire:[1.0,1.8], dmg:6, range:480 }
     ],
     subMaps: {
-      farm: { name:'棉花农场', shortName:'农场', resourceName:'棉花', price:8, mapColor:'#22301e', nodeType:'farm' },
-      mine: { name:'金矿矿洞', shortName:'矿洞', resourceName:'金矿', price:15, mapColor:'#1c1c22', nodeType:'mine' }
+      farm: { name:'棉花农场', shortName:'农场', resourceName:'棉花', price:15, mapColor:'#22301e', nodeType:'farm' },
+      mine: { name:'金矿矿洞', shortName:'矿洞', resourceName:'金矿', price:30, mapColor:'#1c1c22', nodeType:'mine' }
     },
-    boost: { type:'whip', name:'鞭打加速', boostPerStack:0.20, maxStacks:5, duration:10, hpCost:10, cost:0, cooldown:0, color:[200,40,20] },
+    boost: { type:'whip', name:'鞭打加速', boostPerStack:0.25, maxStacks:5, duration:12, hpCost:8, cost:0, cooldown:0, color:[200,40,20] },
     boss: {
       name: '南方联邦将军',
       units: [
-        { name:'南方联邦将军', hp:3000, speed:80, dmg:20, range:700, color:'#8b1a1a', r:22, isMainBoss:true, count:1 }
+        { name:'南方联邦将军', hp:2500, speed:80, dmg:18, range:700, color:'#8b1a1a', r:22, isMainBoss:true, count:1 }
       ]
     },
-    feature: '敌人虚弱 · 起始资金充足 · 战争价便宜'
+    feature: '敌人虚弱 · 收益快 · 战争仅 $2,000'
   },
   britain: {
     id: 'britain', chapter: 2, difficulty: '普通',
@@ -94,11 +100,12 @@ const MODES = {
     playerName: '工厂老板', allyLabel: '工人兄弟',
     allyNames: ['工人兄弟·纺织工','工人兄弟·机械师','工人兄弟·矿工','工人兄弟·码头工','工人兄弟·铁路工','工人兄弟·学徒','工人兄弟·工头'],
     diffMul: { hp: 1.0, dmg: 1.0 },
-    killMoney: { normal: 8, elite: 30 },
-    allyConfig: { maxHp: 120, atk: 14, speed: 260 },
-    allyPrice: 50,
-    warPrice: 100000,
-    startMoney: 500,
+    killMoney: { normal: 20, elite: 80 },
+    allyConfig: { maxHp: 140, atk: 16, speed: 260 },
+    allyPrice: 60,
+    warPrice: 15000,
+    warReward: 3000,
+    startMoney: 800,
     workerCollectTime: 0.9,
     enemyTemplates: [
       { id:'striker', name:'罢工者', color:'#5a2a2a', hp:35, speed:[90,140], fire:[1.0,1.8], dmg:8, range:600 },
@@ -108,17 +115,17 @@ const MODES = {
       { id:'thug', name:'街头暴徒', color:'#5a3a2a', hp:30, speed:[150,200], fire:[0.8,1.5], dmg:6, range:480 }
     ],
     subMaps: {
-      farm: { name:'工厂车间', shortName:'车间', resourceName:'布匹', price:30, mapColor:'#2a2620', nodeType:'farm' },
-      mine: { name:'投资基地', shortName:'投资', resourceName:'股息', price:60, mapColor:'#1c1c22', nodeType:'mine' }
+      farm: { name:'工厂车间', shortName:'车间', resourceName:'布匹', price:40, mapColor:'#2a2620', nodeType:'farm' },
+      mine: { name:'投资基地', shortName:'投资', resourceName:'股息', price:100, mapColor:'#1c1c22', nodeType:'mine' }
     },
     boost: { type:'money', name:'加钱加班', boostPerStack:0.20, maxStacks:5, duration:10, hpCost:0, cost:50, cooldown:0, color:[212,175,55] },
     boss: {
       name: '反对劳动法政府军团',
       units: [
-        { name:'政府军', hp:150, speed:100, dmg:12, range:600, color:'#2a3a5a', r:13, isMainBoss:false, count:60 }
+        { name:'政府军', hp:100, speed:100, dmg:11, range:600, color:'#2a3a5a', r:13, isMainBoss:false, count:60 }
       ]
     },
-    feature: '工人血量厚 · 商品价格贵 · 战争需 10 万'
+    feature: '工人血厚 · 商品翻倍 · 战争 $15,000'
   },
   germany: {
     id: 'germany', chapter: 3, difficulty: '困难',
@@ -126,11 +133,12 @@ const MODES = {
     playerName: 'USSR 卧底', allyLabel: '反纳粹兄弟',
     allyNames: ['反纳粹兄弟·裁缝','反纳粹兄弟·铁匠','反纳粹兄弟·教师','反纳粹兄弟·印刷工','反纳粹兄弟·医生','反纳粹兄弟·面包师','反纳粹兄弟·学生'],
     diffMul: { hp: 1.4, dmg: 1.4 },
-    killMoney: { normal: 10, elite: 40 },
-    allyConfig: { maxHp: 110, atk: 20, speed: 300 },
-    allyPrice: 30,
-    warPrice: 1000000,
-    startMoney: 1000,
+    killMoney: { normal: 35, elite: 150 },
+    allyConfig: { maxHp: 120, atk: 22, speed: 300 },
+    allyPrice: 40,
+    warPrice: 80000,
+    warReward: 20000,
+    startMoney: 1500,
     workerCollectTime: 0.7,
     enemyTemplates: [
       { id:'ss', name:'党卫军', color:'#1a1a1a', hp:55, speed:[80,120], fire:[1.0,1.9], dmg:10, range:620 },
@@ -140,18 +148,18 @@ const MODES = {
       { id:'officer', name:'纳粹军官', color:'#1a1a2a', hp:70, speed:[60,90], fire:[1.3,2.2], dmg:12, range:660 }
     ],
     subMaps: {
-      farm: { name:'战场捡遗物', shortName:'战场', resourceName:'遗物', price:150, mapColor:'#2a2418', nodeType:'farm' },
-      mine: { name:'偷纳粹金库', shortName:'金库', resourceName:'黄金', price:300, mapColor:'#1a1610', nodeType:'mine' }
+      farm: { name:'战场捡遗物', shortName:'战场', resourceName:'遗物', price:200, mapColor:'#2a2418', nodeType:'farm' },
+      mine: { name:'偷纳粹金库', shortName:'金库', resourceName:'黄金', price:500, mapColor:'#1a1610', nodeType:'mine' }
     },
-    boost: { type:'faith', name:'信仰支持', boostPerStack:0.25, maxStacks:4, duration:8, hpCost:0, cost:0, cooldown:2, color:[200,100,60] },
+    boost: { type:'faith', name:'信仰支持', boostPerStack:0.30, maxStacks:4, duration:10, hpCost:0, cost:0, cooldown:1.5, color:[200,100,60] },
     boss: {
       name: '希特勒 + 青年团',
       units: [
-        { name:'希特勒', hp:5000, speed:70, dmg:25, range:700, color:'#1a1a1a', r:24, isMainBoss:true, count:1 },
-        { name:'青年团', hp:80, speed:140, dmg:8, range:480, color:'#5a3a2a', r:11, isMainBoss:false, count:70, speedBoost:0.4 }
+        { name:'希特勒', hp:4000, speed:70, dmg:22, range:700, color:'#1a1a1a', r:24, isMainBoss:true, count:1 },
+        { name:'青年团', hp:60, speed:160, dmg:7, range:480, color:'#5a3a2a', r:11, isMainBoss:false, count:70, speedBoost:0.4 }
       ]
     },
-    feature: '兄弟攻击强 · 战利品极贵 · 战争需 100 万'
+    feature: '兄弟攻高 · 战利品极贵 · 战争 $80,000'
   }
 };
 
@@ -172,6 +180,7 @@ let warClearTimer = 0;
 let warBosses = [];
 let reviveQueue = [];
 let maxAlliesWar = 120;
+let warSnapshot = null;
 
 const STICK_RADIUS = Math.min(64, Math.min(window.innerWidth, window.innerHeight) * 0.14);
 const moveStick = { active:false, id:null, baseX:0, baseY:0, curX:0, curY:0, dx:0, dy:0 };
@@ -182,18 +191,18 @@ let buildings = [], lamps = [], decals = [];
 let enemies = [], bullets = [], particles = [], pickups = [], allies = [];
 let cam = { x:0, y:0 };
 let shake = 0, kills = 0, gameOver = false, hitFlash = 0, time = 0, last = 0;
-let respawnTimer = 0, combo = 0, comboTimer = 0, supplyTimer = 6;
+let respawnTimer = 0, combo = 0, comboTimer = 0, supplyTimer = 4;
 let autoTarget = null, autoTargetTimer = 0;
-let level = 1, xp = 0, xpNext = 8, upgradeUI = null, pausedForUpgrade = false;
+let level = 1, xp = 0, xpNext = 6, upgradeUI = null, pausedForUpgrade = false;
 
 const upgradePool = [
   { id:'dmg', name:'淬火铅弹', desc:'子弹伤害 +15%', apply:()=>player.bulletDmg*=1.15 },
   { id:'firerate', name:'快枪手', desc:'射速 +12%', apply:()=>player.fireRate*=0.88 },
-  { id:'magsize', name:'扩容弹袋', desc:'弹药容量 +6', apply:()=>{player.mag+=6;player.ammo=player.mag;} },
+  { id:'magsize', name:'扩容弹袋', desc:'弹药容量 +10', apply:()=>{player.mag+=10;player.ammo=player.mag;} },
   { id:'reload', name:'快速装填', desc:'装填速度 +20%', apply:()=>player.reloadTime*=0.8 },
-  { id:'speed', name:'轻快步履', desc:'移动速度 +10%', apply:()=>player.moveSpeed*=1.1 },
-  { id:'dashcd', name:'田野身法', desc:'冲刺冷却 -18%', apply:()=>player.dashMaxCd*=0.82 },
-  { id:'maxhp', name:'坚韧体魄', desc:'最大生命 +20', apply:()=>{player.maxHp+=20;player.hp+=20;} },
+  { id:'speed', name:'轻快步履', desc:'移动速度 +12%', apply:()=>player.moveSpeed*=1.12 },
+  { id:'dashcd', name:'田野身法', desc:'冲刺冷却 -20%', apply:()=>player.dashMaxCd*=0.8 },
+  { id:'maxhp', name:'坚韧体魄', desc:'最大生命 +30', apply:()=>{player.maxHp+=30;player.hp+=30;} },
   { id:'pickup', name:'拾荒手套', desc:'拾取范围 +40%', apply:()=>player.pickupRange*=1.4 },
   { id:'drone', name:'猎犬', desc:'获得一只猎犬', apply:()=>addDrone() },
   { id:'pierce', name:'穿甲弹', desc:'子弹可穿透 1 个敌人', apply:()=>player.pierce+=1 },
@@ -217,7 +226,7 @@ function makeAlly(x, y) {
     speed: cfg.speed, angle:0,
     atk: cfg.atk,
     attackCd:0, hurt:0, dead:false, name: pick(mode.allyNames),
-    punchT:0, revivable: warActive, reviving: false
+    punchT:0, revivable: warActive
   };
 }
 
@@ -458,11 +467,11 @@ function genWorld() {
 
 function initSubMap(mapState, type) {
   mapState.nodes = [];
-  for (let i=0;i<16;i++) {
+  for (let i=0;i<NODE_COUNT;i++) {
     let x, y, tries = 0;
     do { x = rand(160, FARM_MAP_W-160); y = rand(160, FARM_MAP_H-160); tries++; }
     while (tries < 30 && dist(x,y,SUBMAP_CENTER_X,SUBMAP_CENTER_Y) < 180);
-    mapState.nodes.push({ x, y, r:16, amount:3, respawnTimer:0, type });
+    mapState.nodes.push({ x, y, r:16, amount:NODE_AMOUNT, respawnTimer:0, type });
   }
   mapState.lastUpdate = performance.now();
 }
@@ -540,7 +549,7 @@ function updateSubMapAllies(mapState, dt) {
   for (const a of mapState.allies) {
     a.bob += dt*6;
     if (a.hurtT > 0) a.hurtT -= dt;
-    if (a.hp < a.maxHp) a.hp = Math.min(a.maxHp, a.hp + 3*dt);
+    if (a.hp < a.maxHp) a.hp = Math.min(a.maxHp, a.hp + 4*dt);
 
     if (a.state === 'idle') {
       let nearest = null, nd = Infinity;
@@ -556,7 +565,7 @@ function updateSubMapAllies(mapState, dt) {
       if (d < a.r + a.targetNode.r + 4) { a.state = 'collecting'; a.collectTimer = collectTime; }
       else {
         const ang = Math.atan2(a.targetNode.y-a.y, a.targetNode.x-a.x);
-        const spd = 130*speedMult;
+        const spd = 150*speedMult;
         a.x += Math.cos(ang)*spd*dt; a.y += Math.sin(ang)*spd*dt; a.angle = ang;
       }
     } else if (a.state === 'collecting') {
@@ -580,7 +589,7 @@ function updateSubMapAllies(mapState, dt) {
   }
 
   for (const n of mapState.nodes) {
-    if (n.amount <= 0) { n.respawnTimer -= dt; if (n.respawnTimer <= 0) n.amount = 3; }
+    if (n.amount <= 0) { n.respawnTimer -= dt; if (n.respawnTimer <= 0) n.amount = NODE_AMOUNT; }
   }
 }
 
@@ -588,10 +597,10 @@ function calcOffline(mapState) {
   const now = performance.now();
   const elapsed = (now - mapState.lastUpdate) / 1000;
   if (elapsed > 0.05) {
-    mapState.warehouse += mapState.allies.length * 0.30 * elapsed;
+    mapState.warehouse += mapState.allies.length * OFFLINE_RATE * elapsed;
     mapState.boostStacks = 0; mapState.boostTimer = 0; mapState.boostCooldown = 0;
     for (const n of mapState.nodes) {
-      if (n.amount <= 0) { n.respawnTimer -= elapsed; if (n.respawnTimer <= 0) n.amount = 3; }
+      if (n.amount <= 0) { n.respawnTimer -= elapsed; if (n.respawnTimer <= 0) n.amount = NODE_AMOUNT; }
     }
   }
   mapState.lastUpdate = now;
@@ -637,6 +646,21 @@ function recallAllies(mapState, from) {
 /* ================= 发动战争 ================= */
 function startWar() {
   if (warActive || money < mode.warPrice || gameOver) return;
+
+  // 快照关键数据，用于战争失败时回滚
+  warSnapshot = {
+    money: money - mode.warPrice,
+    level, xp, xpNext,
+    playerHp: player.hp, playerMaxHp: player.maxHp,
+    playerDmg: player.bulletDmg, playerFireRate: player.fireRate,
+    playerMag: player.mag, playerMoveSpeed: player.moveSpeed,
+    playerDashCd: player.dashMaxCd, playerPierce: player.pierce,
+    droneCount: player.drones.length,
+    allyCount: allies.length,
+    farmAllies: farm.allies.length, mineAllies: mine.allies.length,
+    farmWarehouse: farm.warehouse, mineWarehouse: mine.warehouse
+  };
+
   money -= mode.warPrice;
 
   const farmCount = farm.allies.length;
@@ -709,7 +733,7 @@ function spawnBosses() {
   }
 }
 
-/* ================= 复活系统（只在战争中生效） ================= */
+/* ================= 复活系统（仅战争期） ================= */
 function queueRevive(deadEntity) {
   if (!warActive) return;
   reviveQueue.push({
@@ -736,6 +760,48 @@ function updateReviveQueue(dt) {
   }
 }
 
+/* ================= 战争失败回滚 ================= */
+function rollbackWar() {
+  if (!warSnapshot) return;
+  money = warSnapshot.money;
+  level = warSnapshot.level;
+  xp = warSnapshot.xp;
+  xpNext = warSnapshot.xpNext;
+  player.hp = warSnapshot.playerHp;
+  player.maxHp = warSnapshot.playerMaxHp;
+  player.bulletDmg = warSnapshot.playerDmg;
+  player.fireRate = warSnapshot.playerFireRate;
+  player.mag = warSnapshot.playerMag;
+  player.ammo = player.mag;
+  player.moveSpeed = warSnapshot.playerMoveSpeed;
+  player.dashMaxCd = warSnapshot.playerDashCd;
+  player.pierce = warSnapshot.playerPierce;
+  player.drones = [];
+  for (let i=0;i<warSnapshot.droneCount;i++) addDrone();
+
+  allies = [];
+  for (let i=0;i<Math.min(warSnapshot.allyCount, MAX_ALLIES);i++) addAlly();
+  for (let i=0;i<warSnapshot.farmAllies;i++) farm.allies.push(makeWorker());
+  for (let i=0;i<warSnapshot.mineAllies;i++) mine.allies.push(makeWorker());
+  farm.warehouse = warSnapshot.farmWarehouse;
+  mine.warehouse = warSnapshot.mineWarehouse;
+
+  warActive = false;
+  warCleared = false;
+  warClearTimer = 0;
+  warBosses = [];
+  reviveQueue = [];
+  warSnapshot = null;
+  gameOver = false;
+  pausedForUpgrade = false;
+  upgradeUI = null;
+
+  enemies = [];
+  bullets = [];
+  respawnTimer = 0;
+  for (let i=0;i<20;i++) spawnEnemy();
+}
+
 /* ================= 通关检测 ================= */
 function checkWarClear() {
   if (!warActive || warCleared) return;
@@ -743,6 +809,7 @@ function checkWarClear() {
     warCleared = true;
     warClearTimer = 3.0;
     shake = 20;
+    money += mode.warReward;
     for (let i=0;i<80;i++) {
       spawnParticle(player.x+rand(-100,100), player.y+rand(-100,100),
         rand(0,Math.PI*2), rand(100,500), i%3?'212,175,55':'255,240,180', rand(0.5,1.2), rand(2,5));
@@ -867,7 +934,9 @@ function handleClick(x, y) {
 
   if (gameOver && currentMap === 'city') {
     if (warActive) {
-      if (x > W/2-150 && x < W/2+150 && y > H/2+80 && y < H/2+130) init();
+      if (x > W/2-150 && x < W/2+150 && y > H/2+80 && y < H/2+130) {
+        rollbackWar();
+      }
     } else {
       if (x > W/2-130 && x < W/2+130 && y > H/2+40 && y < H/2+120) init();
     }
@@ -943,9 +1012,9 @@ function spawnEnemy() {
     if (pointInBuilding(x, y)) continue;
     if (dist(x,y,player.x,player.y) < 780) continue;
     let e = makeEnemy(x, y);
-    if (level >= 30 && Math.random() < 0.08) {
+    if (level >= 20 && Math.random() < 0.10) {
       e.isElite = true;
-      e.hp *= rand(5,7); e.maxHp = e.hp; e.speed *= 1.3; e.r = 16;
+      e.hp *= rand(4,6); e.maxHp = e.hp; e.speed *= 1.3; e.r = 16;
     }
     enemies.push(e);
     return;
@@ -1018,10 +1087,8 @@ function damageEnemy(e, dmg, dirX, dirY) {
     kills++; combo++; comboTimer = 2.2;
     shake = Math.max(shake, e.isElite?14:7);
     if (!e.isBoss) {
-      gainXP(e.isElite?12:3);
+      gainXP(e.isElite?15:4);
       money += e.isElite ? mode.killMoney.elite : mode.killMoney.normal;
-    } else if (e.isMainBoss) {
-      money += 500;
     }
 
     const n = e.isElite?30:18;
@@ -1047,7 +1114,7 @@ function addDecal(x, y, r) {
 
 function gainXP(n) {
   xp += n;
-  while (xp >= xpNext) { xp -= xpNext; level++; xpNext = Math.floor(xpNext*1.35+4); triggerUpgrade(); }
+  while (xp >= xpNext) { xp -= xpNext; level++; xpNext = Math.floor(xpNext*1.30+5); triggerUpgrade(); }
 }
 
 function triggerUpgrade() {
@@ -1388,7 +1455,6 @@ function updateCity(dt) {
   for (let i=allies.length-1;i>=0;i--) {
     const a = allies[i];
     if (a.dead) {
-      // 只在战争时触发复活
       if (warActive) queueRevive(a);
       allies.splice(i, 1);
     }
@@ -1422,11 +1488,11 @@ function updateCity(dt) {
     const cap = isTouchMode ? 34 : 55;
     const maxEnemies = Math.min(20 + Math.floor(level/2), cap);
     if (!warActive && respawnTimer <= 0 && enemies.length < maxEnemies) {
-      respawnTimer = Math.max(0.6, 1.6 - level*0.02);
+      respawnTimer = Math.max(0.4, 1.0 - level*0.015);
       spawnEnemy();
     }
     supplyTimer -= dt;
-    if (!warActive && supplyTimer <= 0) { supplyTimer = rand(9,16); spawnSupply(); }
+    if (!warActive && supplyTimer <= 0) { supplyTimer = rand(7,12); spawnSupply(); }
   }
 
   if (comboTimer > 0) { comboTimer -= dt; if (comboTimer <= 0) combo = 0; }
@@ -1526,7 +1592,7 @@ function renderStartScreen() {
     ctx.fillText(m.feature, c.x+18, c.y+c.h*0.60);
 
     ctx.fillStyle = 'rgba(200,190,170,0.55)';
-    ctx.fillText('战争价 $'+m.warPrice.toLocaleString(), c.x+18, c.y+c.h*0.80);
+    ctx.fillText('战争价 $'+m.warPrice.toLocaleString()+' · 通关奖 $'+m.warReward.toLocaleString(), c.x+18, c.y+c.h*0.80);
 
     ctx.textAlign = 'right';
     const diffColors = { '简单':'rgba(120,220,140,0.9)', '普通':'rgba(212,175,55,0.9)', '困难':'rgba(255,100,80,0.9)' };
@@ -1916,7 +1982,7 @@ function drawGlobalUI() {
   ctx.fillText('商 店', shopBtnX+shopBtnW/2, shopBtnY+shopBtnH/2+1);
 
   if (currentMap === 'city' && !warActive && !gameOver) {
-    const warBtnW = 130, warBtnH = 34;
+    const warBtnW = 140, warBtnH = 34;
     const warBtnX = W - 240 - warBtnW;
     const canWar = money >= mode.warPrice;
     if (canWar) {
@@ -2067,13 +2133,14 @@ function drawCityUI() {
       ctx.fillStyle = 'rgba(255,100,80,0.95)';
       const fs = Math.min(52, W*0.11);
       ctx.font = 'bold '+fs+'px "Courier New", monospace';
-      ctx.fillText('战争中倒下', W/2, H/2-40);
+      ctx.fillText('战争中倒下', W/2, H/2-50);
       ctx.fillStyle = 'rgba(255,220,190,0.85)';
-      ctx.font = 'bold '+Math.min(18, W*0.044)+'px "Courier New", monospace';
-      ctx.fillText('点击重新挑战本关', W/2, H/2+20);
+      ctx.font = 'bold '+Math.min(17, W*0.042)+'px "Courier New", monospace';
+      ctx.fillText('进度将回滚到战争前', W/2, H/2+10);
+      ctx.fillText('（保留等级、金钱、兄弟与仓库）', W/2, H/2+40);
       ctx.fillStyle = 'rgba(255,255,255,'+(0.4+Math.sin(time*4)*0.3).toFixed(2)+')';
       ctx.font = 'bold '+Math.min(16, W*0.040)+'px "Courier New", monospace';
-      ctx.fillText('(将损失此战进度)', W/2, H/2+60);
+      ctx.fillText('点击重新挑战', W/2, H/2+90);
     } else {
       ctx.fillStyle = 'rgba(212,175,55,0.95)';
       const fs = Math.min(58, W*0.12);
@@ -2095,14 +2162,17 @@ function drawCityUI() {
     ctx.fillStyle = 'rgba(255,220,120,'+pulse.toFixed(2)+')';
     const fs = Math.min(60, W*0.13);
     ctx.font = 'bold '+fs+'px "Courier New", monospace';
-    ctx.fillText('战争胜利', W/2, H/2-30);
+    ctx.fillText('战争胜利', W/2, H/2-50);
     ctx.fillStyle = 'rgba(255,230,180,0.9)';
     ctx.font = 'bold '+Math.min(20, W*0.05)+'px "Courier New", monospace';
-    ctx.fillText('第'+mode.chapter+'部曲 · '+mode.title+' 通关', W/2, H/2+20);
+    ctx.fillText('第'+mode.chapter+'部曲 · '+mode.title+' 通关', W/2, H/2);
+    ctx.fillStyle = 'rgba(120,220,140,0.95)';
+    ctx.font = 'bold '+Math.min(18, W*0.045)+'px "Courier New", monospace';
+    ctx.fillText('奖励 +$'+mode.warReward.toLocaleString(), W/2, H/2+40);
     ctx.fillStyle = 'rgba(255,240,200,0.7)';
     ctx.font = 'bold '+Math.min(15, W*0.038)+'px "Courier New", monospace';
     const nextText = mode.chapter < 3 ? '即将自动进入下一部曲…' : '全部通关！';
-    ctx.fillText(nextText, W/2, H/2+70);
+    ctx.fillText(nextText, W/2, H/2+80);
   }
 
   ctx.restore();
@@ -2116,9 +2186,9 @@ function drawSubMapUI(mapState, type) {
   const boost = mode.boost;
 
   const infoY = 60;
-  ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(W/2-150, infoY, 300, 44);
+  ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(W/2-160, infoY, 320, 44);
   ctx.strokeStyle = 'rgba(212,175,55,0.4)'; ctx.lineWidth = 1;
-  ctx.strokeRect(W/2-150+0.5, infoY+0.5, 299, 43);
+  ctx.strokeRect(W/2-160+0.5, infoY+0.5, 319, 43);
 
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.font = 'bold 14px "Courier New", monospace';
@@ -2127,7 +2197,7 @@ function drawSubMapUI(mapState, type) {
 
   ctx.font = 'bold 13px "Courier New", monospace';
   ctx.fillStyle = 'rgba(255,240,200,0.9)';
-  ctx.fillText('仓库: '+Math.floor(mapState.warehouse)+' '+cfg.resourceName+'  ·  $'+cfg.price+'/单位 · 兄弟: '+mapState.allies.length+' 人', W/2, infoY+32);
+  ctx.fillText('仓库: '+Math.floor(mapState.warehouse)+' '+cfg.resourceName+' · $'+cfg.price+'/单位 · 兄弟: '+mapState.allies.length, W/2, infoY+32);
 
   const boostBtnW = Math.min(280, W*0.58);
   const boostBtnH = 50;
@@ -2161,9 +2231,10 @@ function drawSubMapUI(mapState, type) {
   ctx.font = 'bold 10px "Courier New", monospace';
   ctx.fillStyle = 'rgba(255,210,190,0.7)';
   let subText = '';
-  if (boost.type === 'whip') subText = '全体兄弟 -'+boost.hpCost+' 血 · 可叠至 +'+(boost.maxStacks*boost.boostPerStack*100)+'%';
-  else if (boost.type === 'money') subText = '花费 $'+boost.cost+' · 可叠至 +'+(boost.maxStacks*boost.boostPerStack*100)+'%';
-  else if (boost.type === 'faith') subText = '无代价 · '+boost.cooldown+'秒冷却 · 可叠至 +'+(boost.maxStacks*boost.boostPerStack*100)+'%';
+  const maxPct = boost.maxStacks*boost.boostPerStack*100;
+  if (boost.type === 'whip') subText = '全体兄弟 -'+boost.hpCost+' 血 · 可叠至 +'+maxPct+'%';
+  else if (boost.type === 'money') subText = '花费 $'+boost.cost+' · 可叠至 +'+maxPct+'%';
+  else if (boost.type === 'faith') subText = '无代价 · '+boost.cooldown+'秒冷却 · 可叠至 +'+maxPct+'%';
   ctx.fillText(subText, W/2, boostBtnY+35);
 
   const btnW = Math.min(180, W*0.4), btnH = 48;
@@ -2191,7 +2262,7 @@ function drawSubMapUI(mapState, type) {
   ctx.font = 'bold 11px "Courier New", monospace';
   ctx.fillStyle = 'rgba(200,190,170,0.5)';
   ctx.textAlign = 'center';
-  ctx.fillText('兄弟在资源点采集 · 每次 '+mode.workerCollectTime.toFixed(1)+' 秒 · 运送需 10 秒', W/2, H-16);
+  ctx.fillText('兄弟采集 '+mode.workerCollectTime.toFixed(1)+' 秒/次 · 运送 '+TRANSPORT_TIME+' 秒 · 每点 '+NODE_AMOUNT+' 单位', W/2, H-16);
   ctx.restore();
 }
 
@@ -2412,15 +2483,15 @@ function init() {
   enemies = []; bullets = []; particles = []; pickups = []; allies = []; decals = [];
   kills = 0; combo = 0; comboTimer = 0;
   shake = 0; hitFlash = 0; time = 0;
-  gameOver = false; respawnTimer = 0; supplyTimer = 6;
+  gameOver = false; respawnTimer = 0; supplyTimer = 4;
   pausedForUpgrade = false; upgradeUI = null;
   autoTarget = null; autoTargetTimer = 0;
   money = mode.startMoney; shopOpen = false; transports = [];
   currentMap = 'city';
   warActive = false; warCleared = false; warClearTimer = 0;
-  warBosses = []; reviveQueue = [];
+  warBosses = []; reviveQueue = []; warSnapshot = null;
 
-  level = 1; xp = 0; xpNext = 8;
+  level = 1; xp = 0; xpNext = 6;
 
   player.x = WORLD/2; player.y = WORLD/2;
   player.vx = player.vy = 0;
@@ -2447,7 +2518,7 @@ function init() {
 
   resetSticks();
   addAlly(player.x+46, player.y+10);
-  for (let i=0;i<22;i++) spawnEnemy();
+  for (let i=0;i<20;i++) spawnEnemy();
   last = performance.now();
 }
 
