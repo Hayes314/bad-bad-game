@@ -59,7 +59,6 @@ const WORKER_MAX_HP = 100;
 
 const CHAPTER_ORDER = ['south1835', 'britain', 'germany'];
 
-/* ================= 三部曲数据 ================= */
 const MODES = {
   south1835: {
     id: 'south1835', chapter: 1, difficulty: '简单',
@@ -69,6 +68,8 @@ const MODES = {
     diffMul: { hp: 0.7, dmg: 0.7 },
     killMoney: { normal: 10, elite: 40 },
     allyConfig: { maxHp: 100, atk: 18, speed: 280 },
+    allyHasGun: false,
+    warTank: false,
     allyPrice: 15,
     warPrice: 2000,
     warReward: 500,
@@ -82,8 +83,8 @@ const MODES = {
       { id:'gambler', name:'赌徒', color:'#5a2a4a', hp:25, speed:[160,220], fire:[1.0,1.8], dmg:6, range:480 }
     ],
     subMaps: {
-      farm: { name:'棉花农场', shortName:'农场', resourceName:'棉花', price:15, mapColor:'#22301e', nodeType:'farm' },
-      mine: { name:'金矿矿洞', shortName:'矿洞', resourceName:'金矿', price:30, mapColor:'#1c1c22', nodeType:'mine' }
+      farm: { name:'棉花农场', shortName:'农场', resourceName:'棉花', price:15, theme:'cotton', mapColor:'#1e3018' },
+      mine: { name:'金矿矿洞', shortName:'矿洞', resourceName:'金矿', price:30, theme:'goldmine', mapColor:'#18181c' }
     },
     boost: { type:'whip', name:'鞭打加速', boostPerStack:0.25, maxStacks:5, duration:12, hpCost:8, cost:0, cooldown:0, color:[200,40,20] },
     boss: {
@@ -92,7 +93,7 @@ const MODES = {
         { name:'南方联邦将军', hp:2500, speed:80, dmg:18, range:700, color:'#8b1a1a', r:22, isMainBoss:true, count:1 }
       ]
     },
-    feature: '敌人虚弱 · 收益快 · 战争仅 $2,000'
+    feature: '敌人虚弱 · 近战肉搏 · 战争仅 $2,000'
   },
   britain: {
     id: 'britain', chapter: 2, difficulty: '普通',
@@ -102,11 +103,15 @@ const MODES = {
     diffMul: { hp: 1.0, dmg: 1.0 },
     killMoney: { normal: 20, elite: 80 },
     allyConfig: { maxHp: 140, atk: 16, speed: 260 },
+    allyHasGun: true,
+    allyGunConfig: { range: 400, fireRate: 1.1, dmgMul: 0.75, bulletSpeed: 1000 },
+    warTank: false,
     allyPrice: 60,
     warPrice: 15000,
     warReward: 3000,
     startMoney: 800,
     workerCollectTime: 0.9,
+    investment: { baseRate: 0.0020, perWorkerRate: 0.0004, withdrawRatio: 0.7 },
     enemyTemplates: [
       { id:'striker', name:'罢工者', color:'#5a2a2a', hp:35, speed:[90,140], fire:[1.0,1.8], dmg:8, range:600 },
       { id:'rival', name:'竞争厂主打手', color:'#4a4a2a', hp:50, speed:[80,120], fire:[1.1,2.0], dmg:10, range:520 },
@@ -115,8 +120,8 @@ const MODES = {
       { id:'thug', name:'街头暴徒', color:'#5a3a2a', hp:30, speed:[150,200], fire:[0.8,1.5], dmg:6, range:480 }
     ],
     subMaps: {
-      farm: { name:'工厂车间', shortName:'车间', resourceName:'布匹', price:40, mapColor:'#2a2620', nodeType:'farm' },
-      mine: { name:'投资基地', shortName:'投资', resourceName:'股息', price:100, mapColor:'#1c1c22', nodeType:'mine' }
+      farm: { name:'工厂车间', shortName:'车间', resourceName:'布匹', price:40, theme:'factory', mapColor:'#25251a' },
+      mine: { name:'投资基地', shortName:'投资', resourceName:'股息', price:80, theme:'investment', mapColor:'#1c1c28' }
     },
     boost: { type:'money', name:'加钱加班', boostPerStack:0.20, maxStacks:5, duration:10, hpCost:0, cost:50, cooldown:0, color:[212,175,55] },
     boss: {
@@ -125,7 +130,7 @@ const MODES = {
         { name:'政府军', hp:100, speed:100, dmg:11, range:600, color:'#2a3a5a', r:13, isMainBoss:false, count:60 }
       ]
     },
-    feature: '工人血厚 · 商品翻倍 · 战争 $15,000'
+    feature: '工人持枪 · 投资复利 · 战争 $15,000'
   },
   germany: {
     id: 'germany', chapter: 3, difficulty: '困难',
@@ -135,6 +140,9 @@ const MODES = {
     diffMul: { hp: 1.4, dmg: 1.4 },
     killMoney: { normal: 35, elite: 150 },
     allyConfig: { maxHp: 120, atk: 22, speed: 300 },
+    allyHasGun: true,
+    allyGunConfig: { range: 350, fireRate: 0.95, dmgMul: 0.65, bulletSpeed: 1100 },
+    warTank: true,
     allyPrice: 40,
     warPrice: 80000,
     warReward: 20000,
@@ -148,8 +156,8 @@ const MODES = {
       { id:'officer', name:'纳粹军官', color:'#1a1a2a', hp:70, speed:[60,90], fire:[1.3,2.2], dmg:12, range:660 }
     ],
     subMaps: {
-      farm: { name:'战场捡遗物', shortName:'战场', resourceName:'遗物', price:200, mapColor:'#2a2418', nodeType:'farm' },
-      mine: { name:'偷纳粹金库', shortName:'金库', resourceName:'黄金', price:500, mapColor:'#1a1610', nodeType:'mine' }
+      farm: { name:'战场捡遗物', shortName:'战场', resourceName:'遗物', price:200, theme:'battlefield', mapColor:'#2a2216' },
+      mine: { name:'偷纳粹金库', shortName:'金库', resourceName:'黄金', price:500, theme:'vault', mapColor:'#1a1610' }
     },
     boost: { type:'faith', name:'信仰支持', boostPerStack:0.30, maxStacks:4, duration:10, hpCost:0, cost:0, cooldown:1.5, color:[200,100,60] },
     boss: {
@@ -159,7 +167,7 @@ const MODES = {
         { name:'青年团', hp:60, speed:160, dmg:7, range:480, color:'#5a3a2a', r:11, isMainBoss:false, count:70, speedBoost:0.4 }
       ]
     },
-    feature: '兄弟攻高 · 战利品极贵 · 战争 $80,000'
+    feature: '兄弟持枪 · 双人坦克 · 战争 $80,000'
   }
 };
 
@@ -171,8 +179,8 @@ let money = 100;
 let shopOpen = false;
 let transports = [];
 
-const farm = { warehouse:0, allies:[], nodes:[], lastUpdate:0, boostStacks:0, boostTimer:0, boostCooldown:0, whipFlash:0 };
-const mine = { warehouse:0, allies:[], nodes:[], lastUpdate:0, boostStacks:0, boostTimer:0, boostCooldown:0, whipFlash:0 };
+const farm = { warehouse:0, allies:[], nodes:[], decorations:[], lastUpdate:0, boostStacks:0, boostTimer:0, boostCooldown:0, whipFlash:0 };
+const mine = { warehouse:0, allies:[], nodes:[], decorations:[], lastUpdate:0, boostStacks:0, boostTimer:0, boostCooldown:0, whipFlash:0 };
 
 let warActive = false;
 let warCleared = false;
@@ -226,7 +234,12 @@ function makeAlly(x, y) {
     speed: cfg.speed, angle:0,
     atk: cfg.atk,
     attackCd:0, hurt:0, dead:false, name: pick(mode.allyNames),
-    punchT:0, revivable: warActive
+    punchT:0, revivable: warActive,
+    fireCd: 0,
+    hasGun: !!mode.allyHasGun,
+    gunRange: mode.allyGunConfig?.range || 0,
+    gunDmgMul: mode.allyGunConfig?.dmgMul || 0,
+    isTank: false
   };
 }
 
@@ -465,14 +478,30 @@ function genWorld() {
   for (let bx=0;bx<=GRID_N;bx++) for (let by=0;by<=GRID_N;by++) lamps.push({ x:bx*BLOCK, y:by*BLOCK });
 }
 
-function initSubMap(mapState, type) {
+function generateDecorations(theme) {
+  const decos = [];
+  const count = theme === 'cotton' ? 26 : theme === 'goldmine' ? 20 : theme === 'factory' ? 18 :
+                theme === 'investment' ? 12 : theme === 'battlefield' ? 32 : 15;
+  for (let i=0;i<count;i++) {
+    let x, y, tries = 0;
+    do {
+      x = rand(100, FARM_MAP_W-100); y = rand(100, FARM_MAP_H-100); tries++;
+    } while (tries < 20 && dist(x, y, SUBMAP_CENTER_X, SUBMAP_CENTER_Y) < 160);
+    if (tries >= 20) continue;
+    decos.push({ x, y, scale: rand(0.7, 1.3), rot: rand(-0.3, 0.3) });
+  }
+  return decos;
+}
+
+function initSubMap(mapState, theme) {
   mapState.nodes = [];
   for (let i=0;i<NODE_COUNT;i++) {
     let x, y, tries = 0;
     do { x = rand(160, FARM_MAP_W-160); y = rand(160, FARM_MAP_H-160); tries++; }
     while (tries < 30 && dist(x,y,SUBMAP_CENTER_X,SUBMAP_CENTER_Y) < 180);
-    mapState.nodes.push({ x, y, r:16, amount:NODE_AMOUNT, respawnTimer:0, type });
+    mapState.nodes.push({ x, y, r:16, amount:NODE_AMOUNT, respawnTimer:0 });
   }
+  mapState.decorations = generateDecorations(theme);
   mapState.lastUpdate = performance.now();
 }
 
@@ -591,6 +620,13 @@ function updateSubMapAllies(mapState, dt) {
   for (const n of mapState.nodes) {
     if (n.amount <= 0) { n.respawnTimer -= dt; if (n.respawnTimer <= 0) n.amount = NODE_AMOUNT; }
   }
+
+  // 投资基地复利增长
+  if (currentMap === 'mine' && mode.subMaps.mine.theme === 'investment' && mode.investment) {
+    const inv = mode.investment;
+    const growthRate = inv.baseRate + inv.perWorkerRate * mapState.allies.length;
+    mapState.warehouse *= (1 + growthRate * dt);
+  }
 }
 
 function calcOffline(mapState) {
@@ -598,6 +634,12 @@ function calcOffline(mapState) {
   const elapsed = (now - mapState.lastUpdate) / 1000;
   if (elapsed > 0.05) {
     mapState.warehouse += mapState.allies.length * OFFLINE_RATE * elapsed;
+    // 离线时投资基地也复利增长
+    if (mode.subMaps.mine.theme === 'investment' && mode.investment) {
+      const inv = mode.investment;
+      const growthRate = inv.baseRate + inv.perWorkerRate * mapState.allies.length;
+      mapState.warehouse *= Math.pow(1 + growthRate, elapsed);
+    }
     mapState.boostStacks = 0; mapState.boostTimer = 0; mapState.boostCooldown = 0;
     for (const n of mapState.nodes) {
       if (n.amount <= 0) { n.respawnTimer -= elapsed; if (n.respawnTimer <= 0) n.amount = NODE_AMOUNT; }
@@ -630,6 +672,15 @@ function sendAllyToFarm() { if (allies.length === 0) return; allies.pop().dead =
 function sendAllyToMine() { if (allies.length === 0) return; allies.pop().dead = true; addTransport('ally-to-mine', { count:1 }); }
 
 function shipResources(mapState, resourceType) {
+  // 投资基地：提取 70%，保留 30% 继续复利
+  if (resourceType === 'mine' && mode.subMaps.mine.theme === 'investment' && mode.investment) {
+    const total = mapState.warehouse;
+    const withdraw = Math.floor(total * mode.investment.withdrawRatio);
+    if (withdraw <= 0) return;
+    mapState.warehouse -= withdraw;
+    addTransport('resource', { amount: withdraw, resourceType });
+    return;
+  }
   const amount = Math.floor(mapState.warehouse);
   if (amount <= 0) return;
   mapState.warehouse -= amount;
@@ -643,11 +694,164 @@ function recallAllies(mapState, from) {
   addTransport('ally-to-city', { count, from });
 }
 
+/* ================= 双人坦克 ================= */
+function formTanks() {
+  if (!mode.warTank) return;
+  const newAllies = [];
+  const pairs = Math.floor(allies.length / 2);
+  for (let i=0;i<pairs;i++) {
+    const a1 = allies[i*2];
+    const a2 = allies[i*2+1];
+    const tank = {
+      x: (a1.x+a2.x)/2, y: (a1.y+a2.y)/2,
+      r: 22,
+      hp: (a1.maxHp + a2.maxHp) * 3,
+      maxHp: (a1.maxHp + a2.maxHp) * 3,
+      speed: 130,
+      angle: 0,
+      atk: (a1.atk + a2.atk),
+      mainCd: rand(0, 1.5),
+      mgCd: 0,
+      isTank: true,
+      crew: [a1, a2],
+      revivable: true,
+      dead: false,
+      name: '双人坦克',
+      hurt: 0
+    };
+    newAllies.push(tank);
+  }
+  // 奇数时保留最后一个
+  if (allies.length % 2 === 1) newAllies.push(allies[allies.length-1]);
+  allies = newAllies;
+}
+
+function updateTank(t, dt) {
+  if (t.dead) return;
+  t.hurt -= dt;
+  if (t.mainCd > 0) t.mainCd -= dt;
+  if (t.mgCd > 0) t.mgCd -= dt;
+
+  let target = null, nd = 600;
+  const targets = warBosses.filter(b => !b.dead);
+  for (const e of targets) {
+    if (e.dead) continue;
+    const d = dist(t.x, t.y, e.x, e.y);
+    if (d < nd) { nd = d; target = e; }
+  }
+
+  if (target) {
+    t.angle = Math.atan2(target.y-t.y, target.x-t.x);
+
+    // 主炮：范围伤害
+    if (t.mainCd <= 0 && nd < 550) {
+      t.mainCd = 2.5;
+      fireTankMain(t, target);
+    }
+    // 机枪：快速连射
+    if (t.mgCd <= 0 && nd < 400) {
+      t.mgCd = 0.16;
+      fireTankMG(t, target);
+    }
+
+    // 移动
+    if (nd > 320) {
+      t.x += Math.cos(t.angle) * t.speed * dt;
+      t.y += Math.sin(t.angle) * t.speed * dt;
+    } else if (nd < 180) {
+      t.x -= Math.cos(t.angle) * t.speed * dt * 0.5;
+      t.y -= Math.sin(t.angle) * t.speed * dt * 0.5;
+    }
+  } else {
+    const d = dist(t.x, t.y, player.x, player.y);
+    if (d > 100) {
+      const ang = Math.atan2(player.y-t.y, player.x-t.x);
+      t.x += Math.cos(ang) * t.speed * dt;
+      t.y += Math.sin(ang) * t.speed * dt;
+      t.angle = ang;
+    }
+  }
+  pushOut(t, t.r);
+
+  // 与其他盟友分离
+  for (const b of allies) {
+    if (b === t || b.dead) continue;
+    const ddx = b.x - t.x, ddy = b.y - t.y;
+    const dd = Math.hypot(ddx, ddy);
+    const min = t.r + (b.r || 12);
+    if (dd < min && dd > 0.01) {
+      const p = (min - dd) / 2;
+      t.x -= (ddx/dd) * p;
+      t.y -= (ddy/dd) * p;
+    }
+  }
+}
+
+function fireTankMain(t, target) {
+  const ang = Math.atan2(target.y-t.y, target.x-t.x);
+  bullets.push({
+    x: t.x + Math.cos(ang)*30,
+    y: t.y + Math.sin(ang)*30,
+    vx: Math.cos(ang)*750, vy: Math.sin(ang)*750,
+    life: 1.0,
+    dmg: t.atk * 2.0,
+    friendly: true,
+    pierceLeft: 0,
+    isShell: true,
+    explodeRadius: 70
+  });
+  for (let i=0;i<12;i++) {
+    spawnParticle(t.x+Math.cos(ang)*30, t.y+Math.sin(ang)*30,
+      ang + rand(-0.6, 0.6), rand(200, 500), '255,180,80', rand(0.15, 0.35), rand(3, 6));
+  }
+  sfxShot(0.22, 0.55);
+  shake = Math.max(shake, 4);
+}
+
+function fireTankMG(t, target) {
+  const baseAng = Math.atan2(target.y-t.y, target.x-t.x);
+  const ang = baseAng + rand(-0.12, 0.12);
+  bullets.push({
+    x: t.x + Math.cos(ang)*22,
+    y: t.y + Math.sin(ang)*22,
+    vx: Math.cos(ang)*1400, vy: Math.sin(ang)*1400,
+    life: 0.5,
+    dmg: t.atk * 0.35,
+    friendly: true,
+    pierceLeft: 0
+  });
+  for (let i=0;i<2;i++) {
+    spawnParticle(t.x+Math.cos(ang)*22, t.y+Math.sin(ang)*22,
+      ang + rand(-0.4,0.4), rand(80, 200), '255,220,150', rand(0.04, 0.1), rand(1.5, 3));
+  }
+  sfxShot(0.08, 1.5);
+}
+
+/* ================= 兄弟射击 ================= */
+function allyShoot(a, target) {
+  const baseAng = Math.atan2(target.y-a.y, target.x-a.x);
+  const ang = baseAng + rand(-0.08, 0.08);
+  const sp = mode.allyGunConfig.bulletSpeed;
+  bullets.push({
+    x: a.x + Math.cos(ang)*14,
+    y: a.y + Math.sin(ang)*14,
+    vx: Math.cos(ang)*sp, vy: Math.sin(ang)*sp,
+    life: 0.8,
+    dmg: a.atk * a.gunDmgMul,
+    friendly: true,
+    pierceLeft: 0
+  });
+  for (let i=0;i<3;i++) {
+    spawnParticle(a.x+Math.cos(ang)*14, a.y+Math.sin(ang)*14,
+      ang + rand(-0.5, 0.5), rand(80, 200), '255,220,150', rand(0.05, 0.12), rand(1.5, 3));
+  }
+  sfxShot(0.05, 1.2);
+}
+
 /* ================= 发动战争 ================= */
 function startWar() {
   if (warActive || money < mode.warPrice || gameOver) return;
 
-  // 快照关键数据，用于战争失败时回滚
   warSnapshot = {
     money: money - mode.warPrice,
     level, xp, xpNext,
@@ -684,6 +888,9 @@ function startWar() {
   }
 
   for (const a of allies) a.revivable = true;
+
+  // 形成双人坦克（仅德国模式）
+  formTanks();
 
   spawnBosses();
   enemies = [];
@@ -733,12 +940,12 @@ function spawnBosses() {
   }
 }
 
-/* ================= 复活系统（仅战争期） ================= */
+/* ================= 复活系统 ================= */
 function queueRevive(deadEntity) {
   if (!warActive) return;
   reviveQueue.push({
     timer: REVIVE_TIME,
-    x: deadEntity.x, y: deadEntity.y, name: deadEntity.name
+    x: deadEntity.x, y: deadEntity.y, name: deadEntity.name || pick(mode.allyNames)
   });
 }
 
@@ -802,7 +1009,6 @@ function rollbackWar() {
   for (let i=0;i<20;i++) spawnEnemy();
 }
 
-/* ================= 通关检测 ================= */
 function checkWarClear() {
   if (!warActive || warCleared) return;
   if (warBosses.every(b => b.dead)) {
@@ -870,7 +1076,7 @@ function handleClick(x, y) {
   }
 
   if (currentMap === 'city' && !warActive && !gameOver) {
-    const warBtnW = 130, warBtnH = 34;
+    const warBtnW = 140, warBtnH = 34;
     const warBtnX = W - 240 - warBtnW;
     if (x > warBtnX && x < warBtnX+warBtnW && y > topY && y < topY+warBtnH) {
       if (money >= mode.warPrice) startWar();
@@ -1168,6 +1374,7 @@ function updateAutoTarget(dt) {
 function updateAlly(a, dt) {
   if (a.dead) return;
   a.hurt -= dt; a.attackCd -= dt; a.punchT -= dt;
+  if (a.fireCd > 0) a.fireCd -= dt;
   let target = null, nd = 500;
   const targets = warActive ? warBosses.filter(b => !b.dead) : enemies;
   for (const e of targets) {
@@ -1179,8 +1386,16 @@ function updateAlly(a, dt) {
   if (target) {
     a.angle = Math.atan2(target.y-a.y, target.x-a.x);
     const reach = a.r + target.r + 6;
+
+    // 有枪：优先远程射击
+    if (a.hasGun && a.gunRange > 0 && nd < a.gunRange && nd > 35 && a.fireCd <= 0) {
+      a.fireCd = mode.allyGunConfig.fireRate;
+      allyShoot(a, target);
+    }
+
     if (nd > reach) { tx = target.x; ty = target.y; }
-    else if (a.attackCd <= 0) {
+    else if (a.attackCd <= 0 && nd > 35) {
+      // 近战（即使有枪，贴身也能打）
       a.attackCd = 0.55; a.punchT = 0.12;
       const len = nd || 1;
       damageEnemy(target, a.atk, (target.x-a.x)/len, (target.y-a.y)/len);
@@ -1204,7 +1419,7 @@ function updateAlly(a, dt) {
     if (b === a || b.dead) continue;
     const ddx = b.x-a.x, ddy = b.y-a.y;
     const dd = Math.hypot(ddx,ddy);
-    const min = a.r+b.r;
+    const min = a.r + (b.r || 12);
     if (dd < min && dd > 0.01) {
       const p = (min-dd)/2;
       a.x -= (ddx/dd)*p; a.y -= (ddy/dd)*p;
@@ -1359,14 +1574,23 @@ function updateBullets(dt) {
   for (let i=bullets.length-1;i>=0;i--) {
     const b = bullets[i];
     b.life -= dt;
-    if (b.life <= 0) { bullets.splice(i, 1); continue; }
+    if (b.life <= 0) {
+      if (b.isShell) explodeShell(b);
+      bullets.splice(i, 1); continue;
+    }
     const steps = 2;
     let removed = false;
     for (let s=0;s<steps;s++) {
       b.x += (b.vx*dt)/steps; b.y += (b.vy*dt)/steps;
-      if (b.x < 0 || b.y < 0 || b.x > WORLD || b.y > WORLD) { bullets.splice(i, 1); removed = true; break; }
+      if (b.x < 0 || b.y < 0 || b.x > WORLD || b.y > WORLD) {
+        if (b.isShell) explodeShell(b);
+        bullets.splice(i, 1); removed = true; break;
+      }
       if (pointInBuilding(b.x, b.y)) {
-        for (let k=0;k<4;k++) spawnParticle(b.x,b.y,Math.atan2(-b.vy,-b.vx)+rand(-1.1,1.1),rand(60,260),'255,220,150',rand(0.08,0.22),rand(1.5,3));
+        if (b.isShell) explodeShell(b);
+        else {
+          for (let k=0;k<4;k++) spawnParticle(b.x,b.y,Math.atan2(-b.vy,-b.vx)+rand(-1.1,1.1),rand(60,260),'255,220,150',rand(0.08,0.22),rand(1.5,3));
+        }
         bullets.splice(i, 1); removed = true; break;
       }
       if (b.friendly) {
@@ -1376,6 +1600,7 @@ function updateBullets(dt) {
           if (dist(b.x,b.y,e.x,e.y) < e.r+4) {
             const len = Math.hypot(b.vx,b.vy) || 1;
             damageEnemy(e, b.dmg, b.vx/len, b.vy/len);
+            if (b.isShell) { explodeShell(b); }
             if (b.pierceLeft > 0) b.pierceLeft--;
             else { bullets.splice(i, 1); removed = true; }
             hit = true; break;
@@ -1387,6 +1612,7 @@ function updateBullets(dt) {
             if (dist(b.x,b.y,e.x,e.y) < e.r+5) {
               const len = Math.hypot(b.vx,b.vy) || 1;
               damageEnemy(e, b.dmg, b.vx/len, b.vy/len);
+              if (b.isShell) { explodeShell(b); }
               if (b.pierceLeft > 0) b.pierceLeft--;
               else { bullets.splice(i, 1); removed = true; }
               break;
@@ -1407,6 +1633,11 @@ function updateBullets(dt) {
               for (let p=0;p<20;p++) spawnParticle(a.x,a.y,rand(0,Math.PI*2),rand(40,300), p%2?'120,80,50':'80,50,30', rand(0.3,0.8), rand(2,5));
               addDecal(a.x, a.y, rand(12,22));
               shake = Math.max(shake, 8);
+              if (a.isTank) {
+                // 坦克爆炸
+                for (let p=0;p<30;p++) spawnParticle(a.x,a.y,rand(0,Math.PI*2),rand(80,400),'255,150,50',rand(0.3,0.8),rand(3,6));
+                shake = Math.max(shake, 15);
+              }
             }
             bullets.splice(i, 1); removed = true; blocked = true; break;
           }
@@ -1434,6 +1665,29 @@ function updateBullets(dt) {
   }
 }
 
+function explodeShell(b) {
+  if (!b.explodeRadius) return;
+  for (const e of enemies) {
+    if (e.dead) continue;
+    if (dist(b.x, b.y, e.x, e.y) < b.explodeRadius) {
+      damageEnemy(e, b.dmg * 0.5, 0, 0);
+    }
+  }
+  if (warActive) {
+    for (const e of warBosses) {
+      if (e.dead) continue;
+      if (dist(b.x, b.y, e.x, e.y) < b.explodeRadius) {
+        damageEnemy(e, b.dmg * 0.5, 0, 0);
+      }
+    }
+  }
+  for (let i=0;i<25;i++) {
+    spawnParticle(b.x, b.y, rand(0,Math.PI*2), rand(150,450),
+      i%3?'255,180,60':'255,220,140', rand(0.3,0.7), rand(3,6));
+  }
+  shake = Math.max(shake, 8);
+}
+
 function updateParticles(dt) {
   for (let i=particles.length-1;i>=0;i--) {
     const p = particles[i];
@@ -1451,7 +1705,10 @@ function updateCity(dt) {
   if (!gameOver) updatePlayer(dt);
   else { player.vx *= Math.pow(0.01, dt); player.vy *= Math.pow(0.01, dt); }
 
-  for (const a of allies) updateAlly(a, dt);
+  for (const a of allies) {
+    if (a.isTank) updateTank(a, dt);
+    else updateAlly(a, dt);
+  }
   for (let i=allies.length-1;i>=0;i--) {
     const a = allies[i];
     if (a.dead) {
@@ -1554,6 +1811,7 @@ function drawNameLabel(text, x, y, color, size) {
   ctx.fillText(text, x, y);
 }
 
+/* ================= 开始页面 ================= */
 function renderStartScreen() {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   ctx.fillStyle = '#0d0b08'; ctx.fillRect(0, 0, W, H);
@@ -1592,7 +1850,7 @@ function renderStartScreen() {
     ctx.fillText(m.feature, c.x+18, c.y+c.h*0.60);
 
     ctx.fillStyle = 'rgba(200,190,170,0.55)';
-    ctx.fillText('战争价 $'+m.warPrice.toLocaleString()+' · 通关奖 $'+m.warReward.toLocaleString(), c.x+18, c.y+c.h*0.80);
+    ctx.fillText('战争 $'+m.warPrice.toLocaleString()+' · 通关 $'+m.warReward.toLocaleString(), c.x+18, c.y+c.h*0.80);
 
     ctx.textAlign = 'right';
     const diffColors = { '简单':'rgba(120,220,140,0.9)', '普通':'rgba(212,175,55,0.9)', '困难':'rgba(255,100,80,0.9)' };
@@ -1604,7 +1862,8 @@ function renderStartScreen() {
     ctx.font = 'bold '+Math.min(11, c.w*0.034)+'px "Courier New", monospace';
     ctx.fillText('Boss：'+m.boss.name, c.x+c.w-18, c.y+c.h*0.45);
     ctx.fillText('加速：'+m.boost.name, c.x+c.w-18, c.y+c.h*0.65);
-    ctx.fillText('复活：仅战争期', c.x+c.w-18, c.y+c.h*0.85);
+    const allyInfo = m.allyHasGun ? (m.warTank ? '持枪+坦克' : '持枪') : '近战';
+    ctx.fillText('战斗：'+allyInfo, c.x+c.w-18, c.y+c.h*0.85);
   }
 
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -1613,6 +1872,7 @@ function renderStartScreen() {
   ctx.fillText('点击卡片进入对应部曲 · 通关后自动进入下一部', W/2, H-30);
 }
 
+/* ================= 主城渲染 ================= */
 function renderCity() {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   ctx.fillStyle = '#0d0b08'; ctx.fillRect(0, 0, W, H);
@@ -1699,10 +1959,18 @@ function renderCity() {
 
   ctx.lineCap = 'round';
   for (const b of bullets) {
-    const len = 0.022;
-    ctx.strokeStyle = b.friendly ? 'rgba(255,235,170,0.95)' : 'rgba(255,140,90,0.95)';
-    ctx.lineWidth = b.friendly ? 3 : 2.5;
-    ctx.beginPath(); ctx.moveTo(b.x,b.y); ctx.lineTo(b.x-b.vx*len, b.y-b.vy*len); ctx.stroke();
+    const len = b.isShell ? 0.04 : 0.022;
+    if (b.isShell) {
+      ctx.strokeStyle = 'rgba(255,200,80,0.95)';
+      ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.moveTo(b.x,b.y); ctx.lineTo(b.x-b.vx*len, b.y-b.vy*len); ctx.stroke();
+      ctx.fillStyle = 'rgba(255,240,180,0.9)';
+      ctx.beginPath(); ctx.arc(b.x, b.y, 4, 0, Math.PI*2); ctx.fill();
+    } else {
+      ctx.strokeStyle = b.friendly ? 'rgba(255,235,170,0.95)' : 'rgba(255,140,90,0.95)';
+      ctx.lineWidth = b.friendly ? 3 : 2.5;
+      ctx.beginPath(); ctx.moveTo(b.x,b.y); ctx.lineTo(b.x-b.vx*len, b.y-b.vy*len); ctx.stroke();
+    }
   }
   ctx.lineCap = 'butt';
 
@@ -1715,7 +1983,8 @@ function renderCity() {
 
   for (const a of allies) {
     if (a.x < vx0 || a.x > vx1 || a.y < vy0 || a.y > vy1) continue;
-    drawAlly(a);
+    if (a.isTank) drawTank(a);
+    else drawAlly(a);
   }
 
   for (const r of reviveQueue) {
@@ -1827,22 +2096,597 @@ function drawAlly(a) {
   ctx.fillStyle = '#d4af37';
   ctx.beginPath(); ctx.arc(a.x, a.y-2, a.r*0.5, Math.PI, 0); ctx.fill();
   ctx.fillRect(a.x-a.r*0.75, a.y-4, a.r*1.5, 3);
-  const punchOffset = a.punchT > 0 ? 16 : 8;
-  ctx.fillStyle = '#7a5236';
-  ctx.beginPath(); ctx.arc(a.x+Math.cos(a.angle)*punchOffset, a.y+Math.sin(a.angle)*punchOffset, 4.5, 0, Math.PI*2); ctx.fill();
+
+  // 有枪的话画枪
+  if (a.hasGun) {
+    ctx.strokeStyle = '#221a16';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(a.x + Math.cos(a.angle)*7, a.y + Math.sin(a.angle)*7);
+    ctx.lineTo(a.x + Math.cos(a.angle)*19, a.y + Math.sin(a.angle)*19);
+    ctx.stroke();
+    ctx.fillStyle = '#4a4a52';
+    ctx.beginPath();
+    ctx.arc(a.x + Math.cos(a.angle)*19, a.y + Math.sin(a.angle)*19, 2, 0, Math.PI*2);
+    ctx.fill();
+  } else {
+    const punchOffset = a.punchT > 0 ? 16 : 8;
+    ctx.fillStyle = '#7a5236';
+    ctx.beginPath(); ctx.arc(a.x+Math.cos(a.angle)*punchOffset, a.y+Math.sin(a.angle)*punchOffset, 4.5, 0, Math.PI*2); ctx.fill();
+  }
+
   const bw = 26;
   ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(a.x-bw/2, a.y-a.r-12, bw, 3.5);
   ctx.fillStyle = '#d4af37'; ctx.fillRect(a.x-bw/2, a.y-a.r-12, bw*clamp(a.hp/a.maxHp,0,1), 3.5);
   drawNameLabel(a.name, a.x, a.y-a.r-17, 'rgba(140,230,160,0.92)', 9.5);
 }
 
+function drawTank(t) {
+  // 阴影
+  ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  ctx.beginPath();
+  ctx.ellipse(t.x+5, t.y+8, t.r*1.2, t.r*0.85, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  ctx.save();
+  ctx.translate(t.x, t.y);
+  ctx.rotate(t.angle);
+
+  // 履带
+  ctx.fillStyle = '#1a1a1a';
+  ctx.fillRect(-t.r, -t.r*0.75, t.r*2, t.r*0.35);
+  ctx.fillRect(-t.r, t.r*0.4, t.r*2, t.r*0.35);
+  ctx.strokeStyle = '#3a3a3a';
+  ctx.lineWidth = 1;
+  for (let i=-t.r;i<t.r;i+=5) {
+    ctx.beginPath();
+    ctx.moveTo(i, -t.r*0.75); ctx.lineTo(i, -t.r*0.4);
+    ctx.moveTo(i, t.r*0.4); ctx.lineTo(i, t.r*0.75);
+    ctx.stroke();
+  }
+
+  // 车身
+  ctx.fillStyle = '#5a5a4a';
+  ctx.fillRect(-t.r*0.85, -t.r*0.55, t.r*1.7, t.r*1.1);
+  ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(-t.r*0.85, -t.r*0.55, t.r*1.7, t.r*1.1);
+
+  // 车身高光
+  ctx.fillStyle = 'rgba(255,220,150,0.15)';
+  ctx.fillRect(-t.r*0.85, -t.r*0.55, t.r*1.7, 3);
+
+  // 炮塔
+  ctx.fillStyle = '#6a6a5a';
+  ctx.beginPath();
+  ctx.arc(0, 0, t.r*0.55, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // 炮管
+  ctx.fillStyle = '#2a2a1a';
+  ctx.fillRect(t.r*0.35, -3, t.r*0.75, 6);
+  ctx.fillStyle = '#1a1a0a';
+  ctx.fillRect(t.r*1.05, -2, 4, 4);
+
+  // 乘员标志（两个金色圆圈）
+  ctx.fillStyle = '#d4af37';
+  ctx.beginPath();
+  ctx.arc(-7, 0, 3, 0, Math.PI*2);
+  ctx.arc(7, 0, 3, 0, Math.PI*2);
+  ctx.fill();
+
+  // 受损状态（红色闪烁）
+  if (t.hurt > 0) {
+    ctx.fillStyle = 'rgba(255,60,40,0.3)';
+    ctx.fillRect(-t.r*0.85, -t.r*0.55, t.r*1.7, t.r*1.1);
+  }
+
+  ctx.restore();
+
+  // 血条
+  const bw = 55;
+  ctx.fillStyle = 'rgba(0,0,0,0.75)';
+  ctx.fillRect(t.x-bw/2, t.y-t.r-18, bw, 6);
+  const ratio = clamp(t.hp/t.maxHp, 0, 1);
+  ctx.fillStyle = ratio > 0.5 ? '#d4af37' : (ratio > 0.25 ? '#e0a040' : '#d94141');
+  ctx.fillRect(t.x-bw/2, t.y-t.r-18, bw*ratio, 6);
+  ctx.strokeStyle = 'rgba(212,175,55,0.5)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(t.x-bw/2+0.5, t.y-t.r-18+0.5, bw-1, 5);
+
+  // 名字
+  drawNameLabel('双人坦克', t.x, t.y-t.r-22, 'rgba(255,220,100,0.98)', 10);
+}
+
+/* ================= 副地图主题渲染 ================= */
+
+function drawSubMapBackground(theme, mapW, mapH) {
+  if (theme === 'cotton') {
+    ctx.fillStyle = '#2a4220';
+    ctx.fillRect(0, 0, mapW, mapH);
+    ctx.strokeStyle = 'rgba(60,100,40,0.5)';
+    ctx.lineWidth = 4;
+    for (let y=30;y<mapH;y+=40) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(mapW, y); ctx.stroke();
+    }
+    ctx.fillStyle = '#4a3a20';
+    ctx.fillRect(mapW/2 - 40, 0, 80, mapH);
+    ctx.fillRect(0, mapH/2 - 40, mapW, 80);
+  } else if (theme === 'goldmine') {
+    ctx.fillStyle = '#1a1a20';
+    ctx.fillRect(0, 0, mapW, mapH);
+    ctx.fillStyle = 'rgba(60,60,70,0.25)';
+    for (let i=0;i<60;i++) {
+      const x = (i*137)%mapW;
+      const y = (i*271)%mapH;
+      ctx.beginPath(); ctx.arc(x, y, rand(8, 25), 0, Math.PI*2); ctx.fill();
+    }
+    ctx.strokeStyle = 'rgba(80,80,90,0.3)';
+    ctx.lineWidth = 2;
+    for (let y=100;y<mapH;y+=150) {
+      ctx.beginPath();
+      ctx.moveTo(0, y + rand(-20,20));
+      ctx.lineTo(mapW/3, y + rand(-30,30));
+      ctx.lineTo(mapW*2/3, y + rand(-30,30));
+      ctx.lineTo(mapW, y + rand(-20,20));
+      ctx.stroke();
+    }
+  } else if (theme === 'factory') {
+    ctx.fillStyle = '#25252a';
+    ctx.fillRect(0, 0, mapW, mapH);
+    ctx.strokeStyle = 'rgba(80,80,90,0.4)';
+    ctx.lineWidth = 2;
+    for (let x=0;x<=mapW;x+=100) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,mapH); ctx.stroke(); }
+    for (let y=0;y<=mapH;y+=100) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(mapW,y); ctx.stroke(); }
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    for (let i=0;i<20;i++) {
+      const x = (i*197)%mapW, y = (i*331)%mapH;
+      ctx.beginPath(); ctx.ellipse(x, y, rand(10,30), rand(6,15), rand(0,Math.PI), 0, Math.PI*2); ctx.fill();
+    }
+  } else if (theme === 'investment') {
+    ctx.fillStyle = '#1c1c28';
+    ctx.fillRect(0, 0, mapW, mapH);
+    for (let i=0;i<25;i++) {
+      ctx.strokeStyle = 'rgba(150,150,180,'+rand(0.05,0.15).toFixed(2)+')';
+      ctx.lineWidth = rand(1, 3);
+      const x1 = rand(0,mapW), y1 = rand(0,mapH);
+      ctx.beginPath(); ctx.moveTo(x1, y1);
+      for (let k=0;k<4;k++) ctx.lineTo(x1 + rand(-200,200), y1 + rand(-200,200));
+      ctx.stroke();
+    }
+    ctx.strokeStyle = 'rgba(100,100,130,0.2)';
+    ctx.lineWidth = 1;
+    for (let x=0;x<=mapW;x+=80) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,mapH); ctx.stroke(); }
+    for (let y=0;y<=mapH;y+=80) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(mapW,y); ctx.stroke(); }
+  } else if (theme === 'battlefield') {
+    ctx.fillStyle = '#2a2216';
+    ctx.fillRect(0, 0, mapW, mapH);
+    for (let i=0;i<50;i++) {
+      const x = (i*173)%mapW, y = (i*287)%mapH;
+      ctx.fillStyle = 'rgba(15,10,5,'+rand(0.2,0.5).toFixed(2)+')';
+      ctx.beginPath(); ctx.ellipse(x, y, rand(15,50), rand(8,25), rand(0,Math.PI), 0, Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle = 'rgba(80,40,20,0.15)';
+    for (let i=0;i<30;i++) {
+      const x = (i*211)%mapW, y = (i*347)%mapH;
+      ctx.beginPath(); ctx.arc(x, y, rand(20, 60), 0, Math.PI*2); ctx.fill();
+    }
+  } else if (theme === 'vault') {
+    ctx.fillStyle = '#1a1610';
+    ctx.fillRect(0, 0, mapW, mapH);
+    ctx.strokeStyle = 'rgba(120,100,60,0.3)';
+    ctx.lineWidth = 3;
+    for (let x=0;x<=mapW;x+=120) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,mapH); ctx.stroke(); }
+    for (let y=0;y<=mapH;y+=120) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(mapW,y); ctx.stroke(); }
+    ctx.fillStyle = 'rgba(160,140,90,0.4)';
+    for (let x=0;x<=mapW;x+=120) for (let y=0;y<=mapH;y+=120) {
+      ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI*2); ctx.fill();
+    }
+  }
+}
+
+function drawSubMapDecorations(theme, decorations) {
+  for (const d of decorations) {
+    ctx.save();
+    ctx.translate(d.x, d.y);
+    ctx.rotate(d.rot);
+    ctx.scale(d.scale, d.scale);
+
+    if (theme === 'cotton') {
+      ctx.strokeStyle = '#5a3a1a'; ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(-15, -12); ctx.lineTo(-15, 12);
+      ctx.moveTo(-5, -12); ctx.lineTo(-5, 12);
+      ctx.moveTo(5, -12); ctx.lineTo(5, 12);
+      ctx.moveTo(-17, -6); ctx.lineTo(7, -6);
+      ctx.moveTo(-17, 4); ctx.lineTo(7, 4);
+      ctx.stroke();
+    } else if (theme === 'goldmine') {
+      ctx.fillStyle = '#3a2a1a';
+      ctx.fillRect(-2, -14, 4, 16);
+      ctx.fillStyle = '#ffc040';
+      ctx.beginPath(); ctx.arc(0, -16, 5, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = 'rgba(255,192,64,0.2)';
+      ctx.beginPath(); ctx.arc(0, -16, 14, 0, Math.PI*2); ctx.fill();
+    } else if (theme === 'factory') {
+      ctx.fillStyle = '#4a4a52';
+      for (let i=0;i<6;i++) {
+        const ang = i * Math.PI / 3;
+        ctx.fillRect(Math.cos(ang)*9-2, Math.sin(ang)*9-2, 5, 5);
+      }
+      ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#1a1a22';
+      ctx.beginPath(); ctx.arc(0, 0, 4, 0, Math.PI*2); ctx.fill();
+    } else if (theme === 'investment') {
+      ctx.fillStyle = '#8a8a9a';
+      ctx.fillRect(-8, -24, 16, 48);
+      ctx.fillStyle = '#9a9aaa';
+      ctx.fillRect(-11, -26, 22, 4);
+      ctx.fillRect(-11, 22, 22, 4);
+      ctx.strokeStyle = 'rgba(0,0,0,0.2)'; ctx.lineWidth = 1;
+      for (let i=0;i<3;i++) {
+        ctx.beginPath();
+        ctx.moveTo(-5+i*5, -22); ctx.lineTo(-5+i*5, 22);
+        ctx.stroke();
+      }
+    } else if (theme === 'battlefield') {
+      ctx.fillStyle = 'rgba(10,5,2,0.6)';
+      ctx.beginPath(); ctx.ellipse(0, 0, 18, 10, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = 'rgba(60,40,20,0.4)';
+      ctx.beginPath(); ctx.ellipse(0, 0, 12, 6, 0, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = 'rgba(100,90,80,0.6)'; ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(-20, -8); ctx.lineTo(20, 8);
+      ctx.moveTo(-20, 8); ctx.lineTo(20, -8);
+      ctx.stroke();
+    } else if (theme === 'vault') {
+      ctx.fillStyle = '#3a3a42';
+      ctx.fillRect(-7, -8, 14, 8);
+      const pulse = 0.5 + Math.sin(time*4 + d.x*0.05)*0.5;
+      ctx.fillStyle = 'rgba(255,60,40,'+(0.3+pulse*0.5).toFixed(2)+')';
+      ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = 'rgba(255,60,40,'+(pulse*0.15).toFixed(2)+')';
+      ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI*2); ctx.fill();
+    }
+
+    ctx.restore();
+  }
+}
+
+function drawSubMapWarehouse(theme, wx, wy) {
+  if (theme === 'cotton') {
+    ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fillRect(wx-54, wy-32, 126, 84);
+    ctx.fillStyle = '#6b3a1a'; ctx.fillRect(wx-60, wy-40, 120, 80);
+    ctx.strokeStyle = 'rgba(0,0,0,0.2)'; ctx.lineWidth = 1;
+    for (let i=1;i<5;i++) { ctx.beginPath(); ctx.moveTo(wx-60, wy-40+i*16); ctx.lineTo(wx+60, wy-40+i*16); ctx.stroke(); }
+    ctx.fillStyle = '#8b2020';
+    ctx.beginPath();
+    ctx.moveTo(wx-66, wy-40); ctx.lineTo(wx, wy-68); ctx.lineTo(wx+66, wy-40);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(255,150,100,0.25)';
+    ctx.beginPath();
+    ctx.moveTo(wx-66, wy-40); ctx.lineTo(wx, wy-68); ctx.lineTo(wx, wy-64); ctx.lineTo(wx-60, wy-40);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#3a2010'; ctx.fillRect(wx-18, wy-8, 36, 48);
+    ctx.strokeStyle = 'rgba(200,150,100,0.5)'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(wx-18, wy-8); ctx.lineTo(wx+18, wy+40);
+    ctx.moveTo(wx+18, wy-8); ctx.lineTo(wx-18, wy+40);
+    ctx.stroke();
+    ctx.fillStyle = '#b8860b';
+    for (let i=0;i<3;i++) {
+      ctx.beginPath(); ctx.ellipse(wx-45+i*6, wy+42, 10, 7, 0, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle = 'rgba(255,240,200,0.95)';
+    ctx.font = 'bold 16px "Courier New", monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('谷 仓', wx, wy+15);
+  } else if (theme === 'goldmine') {
+    ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(wx-54, wy-32, 126, 84);
+    ctx.fillStyle = '#0a0a0a';
+    ctx.beginPath(); ctx.arc(wx, wy+5, 38, Math.PI, 0); ctx.fill();
+    ctx.fillRect(wx-38, wy+5, 76, 35);
+    ctx.fillStyle = '#5a3a1a';
+    ctx.fillRect(wx-48, wy-40, 10, 80);
+    ctx.fillRect(wx+38, wy-40, 10, 80);
+    ctx.fillRect(wx-48, wy-40, 96, 8);
+    ctx.fillStyle = '#4a2a10'; ctx.fillRect(wx-40, wy-28, 80, 5);
+    const glow = 0.6 + Math.sin(time*3)*0.4;
+    ctx.fillStyle = 'rgba(255,192,64,'+(glow*0.3).toFixed(2)+')';
+    ctx.beginPath(); ctx.arc(wx, wy-10, 20, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#ffc040';
+    ctx.beginPath(); ctx.arc(wx, wy-10, 5, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#4a3a2a'; ctx.fillRect(wx-28, wy+42, 46, 18);
+    ctx.fillStyle = '#2a1a0a';
+    ctx.beginPath(); ctx.arc(wx-22, wy+62, 4, 0, Math.PI*2); ctx.arc(wx+12, wy+62, 4, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#5a5a5a'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(wx-50, wy+66); ctx.lineTo(wx+40, wy+66); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,240,200,0.95)';
+    ctx.font = 'bold 16px "Courier New", monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('矿 洞', wx, wy+22);
+  } else if (theme === 'factory') {
+    ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fillRect(wx-54, wy-32, 126, 84);
+    ctx.fillStyle = '#3a3a42'; ctx.fillRect(wx-60, wy-40, 120, 80);
+    ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 1;
+    for (let i=0;i<8;i++) { ctx.beginPath(); ctx.moveTo(wx-60, wy-40+i*10); ctx.lineTo(wx+60, wy-40+i*10); ctx.stroke(); }
+    const winGlow = 0.6 + Math.sin(time*2)*0.2;
+    ctx.fillStyle = 'rgba(255,220,100,'+winGlow.toFixed(2)+')';
+    for (let i=0;i<3;i++) for (let j=0;j<2;j++) ctx.fillRect(wx-45+i*30, wy-30+j*25, 18, 14);
+    ctx.fillStyle = '#2a2a32'; ctx.fillRect(wx+32, wy-72, 16, 42);
+    for (let i=0;i<4;i++) {
+      const smokeT = (time*0.5 + i*0.25) % 1;
+      ctx.fillStyle = 'rgba(150,150,150,'+((1-smokeT)*0.4).toFixed(2)+')';
+      ctx.beginPath(); ctx.arc(wx+40+Math.sin(smokeT*10)*5, wy-80 - smokeT*30, 8+smokeT*8, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle = '#1a1a22'; ctx.fillRect(wx-15, wy-5, 30, 45);
+    ctx.fillStyle = 'rgba(255,240,200,0.95)';
+    ctx.font = 'bold 16px "Courier New", monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('厂 房', wx, wy+15);
+  } else if (theme === 'investment') {
+    // 银行 + 投资标牌
+    ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fillRect(wx-54, wy-32, 126, 84);
+    ctx.fillStyle = '#5a5a6a'; ctx.fillRect(wx-60, wy-30, 120, 70);
+    ctx.fillStyle = 'rgba(200,200,220,0.15)';
+    for (let i=0;i<5;i++) ctx.fillRect(wx-60+rand(0,110), wy-30+rand(0,60), rand(8,20), rand(2,3));
+    ctx.fillStyle = '#7a7a8a';
+    ctx.beginPath();
+    ctx.moveTo(wx-66, wy-30); ctx.lineTo(wx, wy-62); ctx.lineTo(wx+66, wy-30);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#6a6a7a';
+    ctx.beginPath();
+    ctx.moveTo(wx-50, wy-32); ctx.lineTo(wx, wy-56); ctx.lineTo(wx+50, wy-32);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#9a9aaa';
+    for (let i=0;i<4;i++) ctx.fillRect(wx-52+i*28, wy-30, 6, 50);
+    ctx.fillStyle = '#8a8a9a';
+    ctx.fillRect(wx-55, wy+20, 110, 5);
+    ctx.fillRect(wx-60, wy+25, 120, 5);
+
+    // 股票走势小图表
+    ctx.strokeStyle = '#d4af37';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    const chartY = wy - 2;
+    const chartPoints = Math.floor(time*0.5) % 20;
+    for (let i=0;i<10;i++) {
+      const px = wx - 40 + i*9;
+      const ph = Math.sin((i + chartPoints) * 0.7) * 6;
+      if (i === 0) ctx.moveTo(px, chartY + ph);
+      else ctx.lineTo(px, chartY + ph);
+    }
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(255,240,200,0.95)';
+    ctx.font = 'bold 16px "Courier New", monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('投 资', wx, wy+8);
+
+    // 显示复利提示
+    ctx.font = 'bold 9px "Courier New", monospace';
+    ctx.fillStyle = 'rgba(120,220,140,0.8)';
+    const invRate = mode.investment ? (mode.investment.baseRate + mode.investment.perWorkerRate * (mine.allies?.length || 0)) : 0;
+    ctx.fillText('+'+(invRate*60*100).toFixed(1)+'%/分', wx, wy+52);
+  } else if (theme === 'battlefield') {
+    ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fillRect(wx-54, wy-32, 126, 84);
+    ctx.fillStyle = '#4a4a3a';
+    ctx.beginPath();
+    ctx.moveTo(wx-70, wy+40); ctx.lineTo(wx, wy-44); ctx.lineTo(wx+70, wy+40);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.beginPath();
+    ctx.moveTo(wx-35, wy+40); ctx.lineTo(wx, wy-44); ctx.lineTo(wx+35, wy+40);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#2a2a1a';
+    ctx.beginPath();
+    ctx.moveTo(wx-15, wy+40); ctx.lineTo(wx, wy+8); ctx.lineTo(wx+15, wy+40);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#6a5a3a';
+    for (let i=0;i<5;i++) {
+      ctx.beginPath(); ctx.ellipse(wx-50+i*25, wy+45, 11, 6, 0, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle = '#5a3a2a'; ctx.fillRect(wx-78, wy-62, 3, 102);
+    ctx.fillStyle = '#aa2020';
+    ctx.beginPath();
+    ctx.moveTo(wx-75, wy-62); ctx.lineTo(wx-30, wy-52); ctx.lineTo(wx-75, wy-42);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(255,240,200,0.95)';
+    ctx.font = 'bold 16px "Courier New", monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('营 地', wx, wy+22);
+  } else if (theme === 'vault') {
+    ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(wx-54, wy-32, 126, 84);
+    ctx.fillStyle = '#2a2a2e'; ctx.fillRect(wx-60, wy-40, 120, 80);
+    ctx.strokeStyle = 'rgba(100,100,110,0.4)'; ctx.lineWidth = 1;
+    for (let i=0;i<6;i++) { ctx.beginPath(); ctx.moveTo(wx-60, wy-40+i*14); ctx.lineTo(wx+60, wy-40+i*14); ctx.stroke(); }
+    ctx.fillStyle = '#3a3a42';
+    ctx.beginPath(); ctx.arc(wx, wy+5, 36, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#6a6a7a'; ctx.lineWidth = 3; ctx.stroke();
+    ctx.fillStyle = '#2a2a32';
+    ctx.beginPath(); ctx.arc(wx, wy+5, 26, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#8a8a9a'; ctx.lineWidth = 2;
+    for (let i=0;i<8;i++) {
+      const ang = i * Math.PI / 4;
+      ctx.beginPath();
+      ctx.moveTo(wx + Math.cos(ang)*8, wy+5 + Math.sin(ang)*8);
+      ctx.lineTo(wx + Math.cos(ang)*23, wy+5 + Math.sin(ang)*23);
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#aa8a4a';
+    ctx.beginPath(); ctx.arc(wx, wy+5, 8, 0, Math.PI*2); ctx.fill();
+    const alarm = 0.5 + Math.sin(time*4)*0.5;
+    ctx.fillStyle = 'rgba(255,60,40,'+(0.5+alarm*0.5).toFixed(2)+')';
+    ctx.beginPath(); ctx.arc(wx-45, wy-30, 6, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(wx+45, wy-30, 6, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,240,200,0.95)';
+    ctx.font = 'bold 16px "Courier New", monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('金 库', wx, wy-18);
+  }
+}
+
+function drawSubMapNode(theme, n) {
+  if (n.amount <= 0) {
+    if (theme === 'cotton') {
+      ctx.strokeStyle = 'rgba(100,80,50,0.5)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(n.x, n.y+10); ctx.lineTo(n.x, n.y-8); ctx.stroke();
+      ctx.fillStyle = 'rgba(80,60,40,0.4)';
+      ctx.beginPath(); ctx.arc(n.x, n.y, 10, 0, Math.PI*2); ctx.fill();
+    } else if (theme === 'goldmine') {
+      ctx.fillStyle = 'rgba(60,60,70,0.4)';
+      ctx.beginPath(); ctx.arc(n.x, n.y, 14, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = 'rgba(30,30,40,0.6)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(n.x-8, n.y-4); ctx.lineTo(n.x+6, n.y+4); ctx.stroke();
+    } else if (theme === 'factory') {
+      ctx.fillStyle = 'rgba(50,50,55,0.4)'; ctx.fillRect(n.x-12, n.y-10, 24, 20);
+      ctx.strokeStyle = 'rgba(30,30,35,0.6)'; ctx.lineWidth = 1; ctx.strokeRect(n.x-12, n.y-10, 24, 20);
+    } else if (theme === 'investment') {
+      ctx.fillStyle = 'rgba(50,50,60,0.4)'; ctx.fillRect(n.x-14, n.y-10, 28, 20);
+    } else if (theme === 'battlefield') {
+      ctx.fillStyle = 'rgba(40,30,20,0.5)';
+      ctx.beginPath(); ctx.arc(n.x, n.y, 14, 0, Math.PI*2); ctx.fill();
+    } else if (theme === 'vault') {
+      ctx.fillStyle = 'rgba(40,40,45,0.5)'; ctx.fillRect(n.x-14, n.y-10, 28, 20);
+    }
+    return;
+  }
+
+  if (theme === 'cotton') {
+    ctx.strokeStyle = '#3a5a2a'; ctx.lineWidth = 3;
+    for (let k=0;k<3;k++) {
+      const ang = k * Math.PI * 2 / 3 + n.x*0.001;
+      ctx.beginPath(); ctx.moveTo(n.x, n.y+10); ctx.lineTo(n.x + Math.cos(ang)*10, n.y + Math.sin(ang)*10 - 4); ctx.stroke();
+    }
+    ctx.fillStyle = '#4a7a3a';
+    for (let k=0;k<4;k++) {
+      const ang = k * Math.PI / 2 + 0.4;
+      ctx.beginPath(); ctx.ellipse(n.x + Math.cos(ang)*10, n.y + Math.sin(ang)*10, 5, 3, ang, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle = '#f0f0e8';
+    for (let k=0;k<5;k++) {
+      const ang = k * Math.PI * 2 / 5;
+      ctx.beginPath(); ctx.arc(n.x + Math.cos(ang)*6, n.y + Math.sin(ang)*6 - 4, 6, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(n.x, n.y-4, 8, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(180,180,170,0.4)';
+    ctx.beginPath(); ctx.arc(n.x+1, n.y-2, 3, 0, Math.PI*2); ctx.fill();
+  } else if (theme === 'goldmine') {
+    ctx.fillStyle = '#3a3a42';
+    ctx.beginPath(); ctx.arc(n.x, n.y, 16, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(20,20,25,0.5)';
+    for (let k=0;k<4;k++) {
+      const ang = k * Math.PI / 2 + n.y*0.001;
+      ctx.beginPath(); ctx.arc(n.x + Math.cos(ang)*7, n.y + Math.sin(ang)*7, rand(3,5), 0, Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle = '#d4af37';
+    ctx.beginPath();
+    ctx.moveTo(n.x, n.y-15); ctx.lineTo(n.x+10, n.y-2); ctx.lineTo(n.x+5, n.y+12);
+    ctx.lineTo(n.x-5, n.y+12); ctx.lineTo(n.x-10, n.y-2);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#ffe080';
+    ctx.beginPath();
+    ctx.moveTo(n.x, n.y-11); ctx.lineTo(n.x+5, n.y-2); ctx.lineTo(n.x, n.y+6); ctx.lineTo(n.x-5, n.y-2);
+    ctx.closePath(); ctx.fill();
+    const glow = 0.5 + Math.sin(time*4 + n.x)*0.5;
+    ctx.fillStyle = 'rgba(255,240,150,'+glow.toFixed(2)+')';
+    ctx.beginPath(); ctx.arc(n.x, n.y-4, 3, 0, Math.PI*2); ctx.fill();
+  } else if (theme === 'factory') {
+    ctx.fillStyle = '#6a4a2a';
+    ctx.fillRect(n.x-14, n.y-12, 28, 24);
+    ctx.strokeStyle = '#3a2a1a'; ctx.lineWidth = 2;
+    ctx.strokeRect(n.x-14, n.y-12, 28, 24);
+    const colors = ['#8a3a3a', '#3a5a8a', '#3a8a4a', '#8a6a3a'];
+    for (let k=0;k<3;k++) {
+      ctx.fillStyle = colors[(Math.floor(n.x)+k) % 4];
+      ctx.fillRect(n.x-10, n.y-8+k*6, 20, 5);
+      ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(n.x-10, n.y-6+k*6); ctx.lineTo(n.x+10, n.y-6+k*6); ctx.stroke();
+    }
+    ctx.fillStyle = 'rgba(255,255,200,0.8)';
+    ctx.fillRect(n.x-4, n.y-11, 8, 4);
+  } else if (theme === 'investment') {
+    // 投资标的：金币堆或股票凭证
+    if ((Math.floor(n.x) + Math.floor(n.y)) % 2 === 0) {
+      // 股票凭证
+      ctx.fillStyle = 'rgba(220,200,140,0.95)';
+      ctx.fillRect(n.x-14, n.y-10, 28, 20);
+      ctx.strokeStyle = 'rgba(120,90,40,0.8)';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(n.x-14, n.y-10, 28, 20);
+      ctx.strokeStyle = 'rgba(80,60,20,0.5)';
+      ctx.lineWidth = 1;
+      for (let k=0;k<3;k++) {
+        ctx.beginPath();
+        ctx.moveTo(n.x-10, n.y-6+k*4);
+        ctx.lineTo(n.x+10, n.y-6+k*4);
+        ctx.stroke();
+      }
+      // 印章
+      ctx.fillStyle = 'rgba(180,30,30,0.6)';
+      ctx.beginPath();
+      ctx.arc(n.x+7, n.y+5, 4, 0, Math.PI*2);
+      ctx.fill();
+    } else {
+      // 金币堆
+      ctx.fillStyle = '#d4af37';
+      for (let k=0;k<4;k++) {
+        const cx = n.x + ((k%2)*10 - 5);
+        const cy = n.y + (Math.floor(k/2)*6 - 3);
+        ctx.beginPath(); ctx.ellipse(cx, cy, 7, 4, 0, 0, Math.PI*2); ctx.fill();
+      }
+      ctx.fillStyle = 'rgba(255,240,180,0.7)';
+      ctx.beginPath(); ctx.ellipse(n.x-4, n.y-2, 3, 2, 0, 0, Math.PI*2); ctx.fill();
+    }
+  } else if (theme === 'battlefield') {
+    ctx.fillStyle = 'rgba(50,35,20,0.6)';
+    ctx.beginPath(); ctx.arc(n.x, n.y+2, 14, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#5a5a4a';
+    ctx.beginPath(); ctx.arc(n.x-4, n.y-5, 7, Math.PI, 0); ctx.fill();
+    ctx.fillRect(n.x-11, n.y-5, 14, 3);
+    ctx.strokeStyle = '#4a3a2a'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(n.x-10, n.y+8); ctx.lineTo(n.x+10, n.y-2); ctx.stroke();
+    ctx.strokeStyle = '#2a1a0a'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(n.x-8, n.y+7); ctx.lineTo(n.x+8, n.y-2); ctx.stroke();
+    ctx.fillStyle = 'rgba(220,200,160,0.9)';
+    ctx.fillRect(n.x+2, n.y+2, 10, 8);
+    ctx.strokeStyle = 'rgba(100,80,60,0.6)'; ctx.lineWidth = 1;
+    ctx.strokeRect(n.x+2, n.y+2, 10, 8);
+    for (let k=0;k<3;k++) {
+      ctx.beginPath(); ctx.moveTo(n.x+4, n.y+4+k*2); ctx.lineTo(n.x+10, n.y+4+k*2); ctx.stroke();
+    }
+  } else if (theme === 'vault') {
+    for (let k=0;k<4;k++) {
+      const bx = n.x - 12 + (k%2)*12;
+      const by = n.y - 6 + Math.floor(k/2)*6;
+      ctx.fillStyle = '#d4af37';
+      ctx.fillRect(bx, by, 12, 6);
+      ctx.fillStyle = 'rgba(255,240,180,0.8)';
+      ctx.fillRect(bx, by, 12, 2);
+      ctx.strokeStyle = 'rgba(100,80,20,0.6)'; ctx.lineWidth = 1;
+      ctx.strokeRect(bx, by, 12, 6);
+    }
+    ctx.fillStyle = '#e0b840';
+    ctx.fillRect(n.x-6, n.y-12, 12, 6);
+    ctx.fillStyle = 'rgba(255,240,180,0.8)';
+    ctx.fillRect(n.x-6, n.y-12, 12, 2);
+    ctx.strokeStyle = 'rgba(100,80,20,0.6)'; ctx.lineWidth = 1;
+    ctx.strokeRect(n.x-6, n.y-12, 12, 6);
+  }
+}
+
 function renderSubMap(mapState, type) {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   const isFarm = type === 'cotton';
   const cfg = isFarm ? mode.subMaps.farm : mode.subMaps.mine;
+  const theme = cfg.theme;
   const mapW = FARM_MAP_W, mapH = FARM_MAP_H;
 
-  ctx.fillStyle = isFarm ? '#1a2a18' : '#141416';
+  ctx.fillStyle = '#0a0907';
   ctx.fillRect(0, 0, W, H);
 
   if (mapState.boostTimer > 0) {
@@ -1861,78 +2705,74 @@ function renderSubMap(mapState, type) {
   const offsetX = (W-mapW*scale)/2, offsetY = (H-mapH*scale)/2 + 20;
 
   ctx.save();
-  ctx.translate(offsetX, offsetY); ctx.scale(scale, scale);
+  ctx.translate(offsetX, offsetY);
+  ctx.scale(scale, scale);
 
-  ctx.fillStyle = cfg.mapColor; ctx.fillRect(0, 0, mapW, mapH);
-  ctx.strokeStyle = isFarm ? 'rgba(60,90,50,0.25)' : 'rgba(70,70,80,0.25)'; ctx.lineWidth = 1;
-  for (let gx=0;gx<=mapW;gx+=100) { ctx.beginPath(); ctx.moveTo(gx,0); ctx.lineTo(gx,mapH); ctx.stroke(); }
-  for (let gy=0;gy<=mapH;gy+=100) { ctx.beginPath(); ctx.moveTo(0,gy); ctx.lineTo(mapW,gy); ctx.stroke(); }
-
-  const wx = SUBMAP_CENTER_X, wy = SUBMAP_CENTER_Y;
-  ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fillRect(wx-54, wy-32, 120, 80);
-  ctx.fillStyle = '#3a2e22'; ctx.fillRect(wx-60, wy-40, 120, 80);
-  ctx.strokeStyle = 'rgba(212,175,55,0.7)'; ctx.lineWidth = 3; ctx.strokeRect(wx-60, wy-40, 120, 80);
-  ctx.fillStyle = 'rgba(212,175,55,0.12)'; ctx.fillRect(wx-58, wy-38, 116, 76);
-  ctx.fillStyle = 'rgba(212,175,55,0.85)';
-  ctx.font = 'bold 18px "Courier New", monospace';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('仓 库', wx, wy);
+  drawSubMapBackground(theme, mapW, mapH);
+  drawSubMapDecorations(theme, mapState.decorations);
+  drawSubMapWarehouse(theme, SUBMAP_CENTER_X, SUBMAP_CENTER_Y);
 
   for (const n of mapState.nodes) {
-    if (n.amount <= 0) {
-      ctx.fillStyle = isFarm ? 'rgba(60,80,50,0.4)' : 'rgba(60,60,70,0.4)';
-      ctx.beginPath(); ctx.arc(n.x, n.y, n.r*0.6, 0, Math.PI*2); ctx.fill(); continue;
-    }
-    if (isFarm) {
-      ctx.fillStyle = 'rgba(80,120,60,0.6)'; ctx.beginPath(); ctx.arc(n.x, n.y+4, n.r+4, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = 'rgba(235,235,220,0.95)';
-      for (let k=0;k<4;k++) { const ang = k*Math.PI/2+0.4; ctx.beginPath(); ctx.arc(n.x+Math.cos(ang)*7, n.y+Math.sin(ang)*7, 6, 0, Math.PI*2); ctx.fill(); }
-      ctx.beginPath(); ctx.arc(n.x, n.y, 7, 0, Math.PI*2); ctx.fill();
-    } else {
-      ctx.fillStyle = 'rgba(120,90,30,0.65)'; ctx.beginPath(); ctx.arc(n.x, n.y+4, n.r+4, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = '#d4af37';
-      ctx.beginPath(); ctx.moveTo(n.x, n.y-13); ctx.lineTo(n.x+11, n.y); ctx.lineTo(n.x, n.y+13); ctx.lineTo(n.x-11, n.y); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = 'rgba(255,240,180,0.9)';
-      ctx.beginPath(); ctx.moveTo(n.x, n.y-8); ctx.lineTo(n.x+6, n.y); ctx.lineTo(n.x, n.y+8); ctx.lineTo(n.x-6, n.y); ctx.closePath(); ctx.fill();
-    }
+    drawSubMapNode(theme, n);
   }
 
   const boostActive = mapState.boostTimer > 0;
   const bc = mode.boost.color;
   for (const a of mapState.allies) {
-    ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.beginPath(); ctx.ellipse(a.x+2, a.y+4, a.r*1.05, a.r*0.8, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.beginPath(); ctx.ellipse(a.x+2, a.y+4, a.r*1.05, a.r*0.8, 0, 0, Math.PI*2); ctx.fill();
+
     const hpRatio = clamp(a.hp/a.maxHp, 0, 1);
     let bodyColor = '#5a3d28';
     if (a.hurtT > 0) bodyColor = 'rgb('+Math.min(180,bc[0]+40)+','+Math.min(80,bc[1])+',30)';
     else if (hpRatio < 0.35) bodyColor = '#6a2a1a';
-    ctx.fillStyle = bodyColor; ctx.beginPath(); ctx.arc(a.x, a.y, a.r, 0, Math.PI*2); ctx.fill();
+
+    ctx.fillStyle = bodyColor;
+    ctx.beginPath(); ctx.arc(a.x, a.y, a.r, 0, Math.PI*2); ctx.fill();
     ctx.strokeStyle = 'rgba(212,175,55,0.7)'; ctx.lineWidth = 2; ctx.stroke();
+
     ctx.fillStyle = '#d4af37';
     ctx.beginPath(); ctx.arc(a.x, a.y-2, a.r*0.5, Math.PI, 0); ctx.fill();
     ctx.fillRect(a.x-a.r*0.75, a.y-4, a.r*1.5, 3);
+
     if (boostActive) {
       const trailDir = a.angle + Math.PI;
       for (let k=1;k<=3;k++) {
         ctx.fillStyle = 'rgba('+bc[0]+','+bc[1]+','+bc[2]+','+(0.25-k*0.07).toFixed(2)+')';
-        ctx.beginPath(); ctx.arc(a.x+Math.cos(trailDir)*k*7, a.y+Math.sin(trailDir)*k*7, a.r*(1-k*0.15), 0, Math.PI*2); ctx.fill();
+        ctx.beginPath();
+        ctx.arc(a.x+Math.cos(trailDir)*k*7, a.y+Math.sin(trailDir)*k*7, a.r*(1-k*0.15), 0, Math.PI*2);
+        ctx.fill();
       }
     }
+
     const bw = 22;
-    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(a.x-bw/2, a.y-a.r-10, bw, 3);
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillRect(a.x-bw/2, a.y-a.r-10, bw, 3);
     ctx.fillStyle = hpRatio > 0.5 ? '#d4af37' : (hpRatio > 0.25 ? '#e0a040' : '#d94141');
     ctx.fillRect(a.x-bw/2, a.y-a.r-10, bw*hpRatio, 3);
+
     if (a.state === 'collecting') {
       const pulse = 0.5 + Math.sin(time*20)*0.5;
-      ctx.strokeStyle = boostActive ? 'rgba('+bc[0]+','+bc[1]+','+bc[2]+','+pulse.toFixed(2)+')' : 'rgba(255,240,180,'+pulse.toFixed(2)+')';
-      ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(a.x, a.y, a.r+6, 0, Math.PI*2); ctx.stroke();
+      ctx.strokeStyle = boostActive
+        ? 'rgba('+bc[0]+','+bc[1]+','+bc[2]+','+pulse.toFixed(2)+')'
+        : 'rgba(255,240,180,'+pulse.toFixed(2)+')';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(a.x, a.y, a.r+6, 0, Math.PI*2);
+      ctx.stroke();
     }
+
     if (a.hurtT > 0) {
-      ctx.strokeStyle = 'rgba(255,40,20,'+(a.hurtT*2).toFixed(2)+')'; ctx.lineWidth = 2.5;
-      ctx.beginPath(); ctx.arc(a.x, a.y, a.r+8, 0, Math.PI*2); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,40,20,'+(a.hurtT*2).toFixed(2)+')';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(a.x, a.y, a.r+8, 0, Math.PI*2);
+      ctx.stroke();
     }
   }
 
   ctx.restore();
+
   if (vignette) { ctx.fillStyle = vignette; ctx.fillRect(0, 0, W, H); }
   drawSubMapUI(mapState, type);
 }
@@ -2105,6 +2945,13 @@ function drawCityUI() {
       ctx.fillStyle = 'rgba(120,220,200,0.8)';
       ctx.fillText('复活倒计时: '+reviveQueue.length+' 人', 22, 128);
     }
+    if (mode.warTank) {
+      const tankCount = allies.filter(a => a.isTank).length;
+      if (tankCount > 0) {
+        ctx.fillStyle = 'rgba(212,175,55,0.9)';
+        ctx.fillText('双人坦克: '+tankCount+' 辆', 22, 148);
+      }
+    }
   } else if (combo > 1 && comboTimer > 0) {
     ctx.font = 'bold 24px "Courier New", monospace';
     ctx.fillStyle = 'rgba(255,140,70,'+clamp(comboTimer/2.2,0,1).toFixed(2)+')';
@@ -2186,9 +3033,9 @@ function drawSubMapUI(mapState, type) {
   const boost = mode.boost;
 
   const infoY = 60;
-  ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(W/2-160, infoY, 320, 44);
+  ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(W/2-170, infoY, 340, 44);
   ctx.strokeStyle = 'rgba(212,175,55,0.4)'; ctx.lineWidth = 1;
-  ctx.strokeRect(W/2-160+0.5, infoY+0.5, 319, 43);
+  ctx.strokeRect(W/2-170+0.5, infoY+0.5, 339, 43);
 
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.font = 'bold 14px "Courier New", monospace';
@@ -2197,7 +3044,18 @@ function drawSubMapUI(mapState, type) {
 
   ctx.font = 'bold 13px "Courier New", monospace';
   ctx.fillStyle = 'rgba(255,240,200,0.9)';
-  ctx.fillText('仓库: '+Math.floor(mapState.warehouse)+' '+cfg.resourceName+' · $'+cfg.price+'/单位 · 兄弟: '+mapState.allies.length, W/2, infoY+32);
+  if (type === 'cotton' && mode.subMaps.mine.theme === 'investment') {
+    const inv = mode.investment;
+    const rate = (inv.baseRate + inv.perWorkerRate * mapState.allies.length) * 60 * 100;
+    ctx.fillText('投资组合: $'+Math.floor(mapState.warehouse).toLocaleString()+' · +'+rate.toFixed(2)+'%/分', W/2, infoY+32);
+  } else {
+    ctx.fillText('仓库: '+Math.floor(mapState.warehouse)+' '+cfg.resourceName+' · $'+cfg.price+'/单位 · 兄弟: '+mapState.allies.length, W/2, infoY+32);
+  }
+
+  // 投资基地显示提取提示
+  if (type === 'cotton' && mode.subMaps.mine.theme === 'investment') {
+    // 这个分支不会走到，投资基地在 mine
+  }
 
   const boostBtnW = Math.min(280, W*0.58);
   const boostBtnH = 50;
@@ -2241,14 +3099,15 @@ function drawSubMapUI(mapState, type) {
   const bx1 = 30, by1 = H-70;
   const bx2 = W-btnW-30, by2 = H-70;
 
-  const canShip = Math.floor(mapState.warehouse) > 0;
+  const isInvestment = (type === 'cotton' && mode.subMaps.mine.theme === 'investment');
+  const canShip = isInvestment ? mapState.warehouse > 0 : Math.floor(mapState.warehouse) > 0;
   ctx.fillStyle = canShip ? 'rgba(212,175,55,0.28)' : 'rgba(0,0,0,0.5)';
   ctx.fillRect(bx1, by1, btnW, btnH);
   ctx.strokeStyle = canShip ? 'rgba(212,175,55,0.9)' : 'rgba(212,175,55,0.25)';
   ctx.lineWidth = 2; ctx.strokeRect(bx1+0.5, by1+0.5, btnW-1, btnH-1);
   ctx.fillStyle = canShip ? 'rgba(255,240,200,0.98)' : 'rgba(212,175,55,0.35)';
   ctx.font = 'bold 15px "Courier New", monospace';
-  ctx.fillText('运送'+cfg.resourceName+'回城', bx1+btnW/2, by1+btnH/2+1);
+  ctx.fillText('提取'+cfg.resourceName+'回城', bx1+btnW/2, by1+btnH/2+1);
 
   const canRecall = mapState.allies.length > 0;
   ctx.fillStyle = canRecall ? 'rgba(120,200,140,0.22)' : 'rgba(0,0,0,0.5)';
@@ -2262,7 +3121,11 @@ function drawSubMapUI(mapState, type) {
   ctx.font = 'bold 11px "Courier New", monospace';
   ctx.fillStyle = 'rgba(200,190,170,0.5)';
   ctx.textAlign = 'center';
-  ctx.fillText('兄弟采集 '+mode.workerCollectTime.toFixed(1)+' 秒/次 · 运送 '+TRANSPORT_TIME+' 秒 · 每点 '+NODE_AMOUNT+' 单位', W/2, H-16);
+  let hintText = '兄弟采集 '+mode.workerCollectTime.toFixed(1)+' 秒/次 · 运送 '+TRANSPORT_TIME+' 秒 · 每点 '+NODE_AMOUNT+' 单位';
+  if (mode.subMaps.mine.theme === 'investment' && type === 'mine') {
+    hintText = '投资复利: 每多一个工人 +'+(mode.investment.perWorkerRate*60*100).toFixed(1)+'%/分 · 提取保留 '+(100-mode.investment.withdrawRatio*100)+'% 继续投资';
+  }
+  ctx.fillText(hintText, W/2, H-16);
   ctx.restore();
 }
 
@@ -2441,8 +3304,13 @@ function drawMinimap() {
     ctx.fillRect(mx+b.x*s-sz/2, my+b.y*s-sz/2, sz, sz);
   }
   for (const a of allies) {
-    ctx.fillStyle = 'rgba(120,220,140,0.95)';
-    ctx.beginPath(); ctx.arc(mx+a.x*s, my+a.y*s, 2, 0, Math.PI*2); ctx.fill();
+    if (a.isTank) {
+      ctx.fillStyle = 'rgba(212,175,55,0.95)';
+      ctx.fillRect(mx+a.x*s-2, my+a.y*s-2, 4, 4);
+    } else {
+      ctx.fillStyle = 'rgba(120,220,140,0.95)';
+      ctx.beginPath(); ctx.arc(mx+a.x*s, my+a.y*s, 2, 0, Math.PI*2); ctx.fill();
+    }
   }
   ctx.fillStyle = 'rgba(130,220,255,1)';
   ctx.beginPath(); ctx.arc(mx+player.x*s, my+player.y*s, 3, 0, Math.PI*2); ctx.fill();
@@ -2509,12 +3377,12 @@ function init() {
   farm.warehouse = 0; farm.allies = []; farm.nodes = [];
   farm.lastUpdate = performance.now();
   farm.boostStacks = 0; farm.boostTimer = 0; farm.boostCooldown = 0; farm.whipFlash = 0;
-  initSubMap(farm, 'cotton');
+  initSubMap(farm, mode.subMaps.farm.theme);
 
   mine.warehouse = 0; mine.allies = []; mine.nodes = [];
   mine.lastUpdate = performance.now();
   mine.boostStacks = 0; mine.boostTimer = 0; mine.boostCooldown = 0; mine.whipFlash = 0;
-  initSubMap(mine, 'gold');
+  initSubMap(mine, mode.subMaps.mine.theme);
 
   resetSticks();
   addAlly(player.x+46, player.y+10);
